@@ -8,7 +8,7 @@ import { getCkeditorAliases } from "./vite.ckeditorAliases";
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  base: "/admin/",
+  // base: "/admin/",
   plugins: [
     react(),
     svgr({

@@ -17,7 +17,7 @@ createRoot(document.getElementById("root")!).render(
     <PersistGate loading={null} persistor={persistor}>
       <ThemeProvider>
         <AppWrapper>
-          <BrowserRouter basename="/admin">
+          <BrowserRouter>
             <App />
             <ToastContainer style={{ zIndex: 999999 }} />
           </BrowserRouter>

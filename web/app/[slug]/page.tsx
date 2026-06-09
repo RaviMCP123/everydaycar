@@ -23,8 +23,16 @@ const RESERVED_SLUGS = new Set([
   "terms-and-conditions",
 ]);
 
-/** CMS pages that have dedicated routes or must exist in static export. */
-const STATIC_CMS_PAGE_SLUGS = ["privacy-policy", "terms-and-conditions"];
+/** Fallback slugs so static export never receives an empty param list. */
+const FALLBACK_CMS_SLUGS = ["privacy-policy", "terms-and-conditions"];
+
+function toSlugParams(slugs: string[]): Array<{ slug: string }> {
+  const unique = Array.from(
+    new Set(slugs.map((slug) => slug.trim().toLowerCase()).filter(Boolean)),
+  );
+  const list = unique.length > 0 ? unique : FALLBACK_CMS_SLUGS;
+  return list.map((slug) => ({ slug }));
+}
 
 export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
   try {
@@ -34,11 +42,13 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
       .filter((slug): slug is string => Boolean(slug))
       .filter((slug) => !RESERVED_SLUGS.has(slug));
 
-    return Array.from(new Set([...slugs, ...STATIC_CMS_PAGE_SLUGS])).map(
-      (slug) => ({ slug }),
+    return toSlugParams(slugs);
+  } catch (error) {
+    console.warn(
+      "[CMS] generateStaticParams: API unavailable, using fallback slugs",
+      error,
     );
-  } catch {
-    return [];
+    return toSlugParams(FALLBACK_CMS_SLUGS);
   }
 }
 

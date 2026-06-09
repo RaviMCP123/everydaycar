@@ -26,13 +26,13 @@ async function bootstrap() {
     // SSL FILE LOCATION
   const httpsOptions = {
     key: readFileSync(
-      '/home/xbetpool/ssl/private/tanaapi.cloudpulsetech.in.key',
+      '/home/xbetpool/ssl/private/everydaycar.cloudpulsetech.in.key',
     ),
     cert: readFileSync(
-      '/home/xbetpool/ssl/cert/tanaapi.cloudpulsetech.in.crt',
+      '/home/xbetpool/ssl/cert/everydaycar.cloudpulsetech.in.crt',
     ),
     ca: readFileSync(
-      '/home/xbetpool/ssl/cert/tanaapi.cloudpulsetech.in-ca.crt',
+      '/home/xbetpool/ssl/cert/everydaycar.cloudpulsetech.in-ca.crt',
     ),
   };
   const app = await NestFactory.create<NestExpressApplication>(AppModule,{
