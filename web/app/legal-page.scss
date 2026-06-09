@@ -1,0 +1,95 @@
+/* Shared Privacy + Terms legal body styles */
+
+.legal-page-shell {
+  background: var(--color-white);
+  padding-block: clamp(56px, 6vw, 64px);
+
+  .container {
+    width: min(100% - (var(--site-gutter) * 2), 980px);
+    margin-inline: auto;
+  }
+}
+
+.legal-page-content {
+  color: var(--color-primary-navy);
+  width: 100%;
+
+  .section-kicker {
+    margin-bottom: 1.5rem !important;
+  }
+
+  section {
+    border-bottom: 1px solid var(--color-border) !important;
+    padding-block: 36px !important;
+
+    &:last-of-type {
+      border-bottom: none !important;
+    }
+  }
+
+  h2.section-title {
+    font-size: clamp(25px, 3vw, 32px) !important;
+  }
+
+  .section-copy {
+    color: var(--color-muted-text);
+    font-size: clamp(14px, 1.7vw, 16px);
+    line-height: 1.75;
+
+    > * {
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+    }
+
+    > * + * {
+      margin-top: 1.25rem !important;
+    }
+
+    h3 {
+      padding-top: 1rem !important;
+      font-size: 18px !important;
+      font-weight: 600 !important;
+      line-height: 1.75 !important;
+      color: var(--color-primary-navy) !important;
+    }
+
+    p {
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+    }
+  }
+
+  ul.list-disc {
+    list-style: disc !important;
+    padding-left: 1.5rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+
+    li {
+      margin: 0 !important;
+      padding: 0 !important;
+      line-height: 1.5 !important;
+    }
+
+    &::marker,
+    li::marker {
+      color: var(--color-bright-blue);
+    }
+  }
+
+  a.font-semibold,
+  a strong {
+    color: var(--color-bright-blue);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  address {
+    font-style: normal;
+    line-height: 1.75;
+  }
+}

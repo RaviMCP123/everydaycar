@@ -1,0 +1,341 @@
+@use "tailwindcss";
+@use "./cms-page-full.scss";
+@use "./legal-page.scss";
+@use "./site-home.scss";
+
+@source "./cms-safelist.html";
+
+:root {
+  --color-primary-navy: #071d33;
+  --color-secondary-navy: #0b2842;
+  --color-bright-blue: rgba(30, 115, 190, 1);
+  --color-button-blue: rgba(30, 115, 190, 1);
+  --color-yellow: rgba(255, 217, 61, 1);
+  --color-light-bg: #f5f8fc;
+  --color-white: #ffffff;
+  --color-muted-text: #6b7280;
+  --color-border: #d6e0ea;
+  --color-navy: #071d33;
+  --color-blue: #247dca;
+  --color-blue-hover: #1b6eb5;
+  --color-green: #22b573;
+  --color-green-light: #e9fff3;
+  --color-muted: #64748b;
+  --color-error: #be123c;
+  --color-error-border: #fda4af;
+  --color-error-light: #fff1f2;
+  --background: var(--color-white);
+  --foreground: var(--color-primary-navy);
+  --site-max-width: 1280px;
+  --site-gutter: clamp(16px, 4vw, 32px);
+  --header-height: clamp(60px, 6.8vw, 80px);
+  --font-weight-bold: 700;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-poppins), "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-poppins), "Poppins", ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html {
+  font-family: var(--font-poppins), "Poppins", ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  overflow-x: hidden;
+  padding-top: var(--header-height);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+main {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@keyframes successModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.container {
+  width: min(100% - (var(--site-gutter) * 2), var(--site-max-width));
+  margin-inline: auto;
+}
+
+.section-padding {
+  padding-block: clamp(64px, 8vw, 84px);
+}
+
+.section-title {
+  color: var(--color-primary-navy);
+  font-size: clamp(30px, 4vw, 44px);
+  font-weight: 700 !important;
+  letter-spacing: 0;
+  line-height: 1.08;
+}
+
+.section-kicker {
+  color: var(--color-bright-blue);
+  font-size: clamp(12px, 1.4vw, 14px);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.section-copy {
+  color: var(--color-muted-text);
+  font-size: clamp(14px, 1.7vw, 16px);
+  line-height: 1.75;
+}
+
+.page-hero {
+  align-items: center;
+  background: var(--color-primary-navy);
+  color: var(--color-white);
+  display: flex;
+  isolation: isolate;
+  min-height: 300px;
+  overflow: hidden;
+  padding-block: clamp(56px, 6vw, 64px);
+  position: relative;
+}
+
+.page-hero__line {
+  background: rgb(255 255 255 / 70%);
+  height: 1px;
+  margin-bottom: 18px;
+  width: 32px;
+}
+
+.page-hero__kicker {
+  color: rgb(255 255 255 / 82%);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+}
+
+.page-hero__title {
+  font-size: clamp(30px, 5vw, 48px);
+  font-weight: 700;
+  line-height: 1.04;
+  max-width: 600px;
+}
+
+.page-hero__copy {
+  color: rgb(255 255 255 / 76%);
+  font-size: 14px;
+  line-height: 1.7;
+  margin-top: 18px;
+  max-width: 590px;
+}
+
+.btn {
+  align-items: center;
+  border-radius: 6px;
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 8px;
+  justify-content: center;
+  line-height: 1;
+  min-height: 44px;
+  padding: 14px 21px;
+  text-align: center;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+  white-space: nowrap;
+
+  svg {
+    flex: 0 0 auto;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.btn-primary {
+  background: var(--color-button-blue);
+  color: var(--color-white);
+  box-shadow: 0 14px 28px rgb(30 115 190 / 24%);
+
+  &:hover {
+    background: var(--color-bright-blue);
+  }
+}
+
+.page-section {
+  background: var(--color-white);
+  padding-block: clamp(56px, 6vw, 64px);
+}
+
+.page-section--light {
+  background: var(--color-light-bg);
+}
+
+.elevated-card {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-white);
+  box-shadow: 0 14px 34px rgb(18 42 74 / 7%);
+}
+
+.dark-cta {
+  border-radius: 8px;
+  background: var(--color-primary-navy);
+  color: var(--color-white);
+  box-shadow: 0 18px 42px rgb(7 29 51 / 16%);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 58%);
+  color: var(--color-white);
+
+  &:hover {
+    background: rgb(255 255 255 / 10%);
+    border-color: var(--color-white);
+  }
+}
+
+.btn-yellow {
+  background: var(--color-yellow);
+  color: var(--color-primary-navy);
+  box-shadow: 0 8px 18px rgb(255 196 0 / 18%);
+
+  &:hover {
+    background: rgb(255 224 92);
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --site-gutter: 16px;
+    --header-height: 60px;
+  }
+
+  .btn {
+    width: 100%;
+    white-space: normal;
+  }
+}
+
+/* CMS rich text — :where() keeps specificity low so pasted inline styles win */
+.cms-html-content {
+  color: var(--color-primary-navy);
+  font-size: 15px;
+  line-height: 1.75;
+
+  :where(h1, h2, h3, h4) {
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  :where(h2) {
+    font-size: 1.5rem;
+  }
+
+  :where(h3) {
+    font-size: 1.25rem;
+  }
+
+  :where(p) {
+    margin-bottom: 1em;
+  }
+
+  :where(ul, ol) {
+    margin-bottom: 1em;
+    padding-left: 1.5em;
+  }
+
+  :where(li) {
+    margin-bottom: 0.35em;
+  }
+
+  :where(a) {
+    color: var(--color-bright-blue);
+    text-decoration: underline;
+  }
+
+  :where(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1em 0;
+  }
+
+  :where(blockquote) {
+    margin: 1em 0;
+    padding-left: 1em;
+    border-left: 3px solid var(--color-bright-blue);
+    color: var(--color-muted-text);
+  }
+
+  :where(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1em 0;
+  }
+
+  :where(th, td) {
+    border: 1px solid var(--color-border);
+    padding: 0.5em 0.75em;
+    text-align: left;
+  }
+}

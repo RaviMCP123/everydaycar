@@ -1,0 +1,103 @@
+/* Full-page CMS HTML (pasted from admin) — layout + fixes Tailwind/prose cannot cover alone */
+
+.cms-page-full {
+  color: var(--color-primary-navy);
+  width: 100%;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+
+  > main {
+    display: block;
+  }
+
+  /* CMS content sometimes includes its own footer; app shell already renders one */
+  > footer,
+  > main + footer,
+  > main > footer {
+    display: none;
+  }
+
+  a.btn {
+    color: var(--color-white);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+
+  a:not(.btn) {
+    color: var(--color-blue);
+
+    &:hover {
+      color: var(--color-blue-hover);
+    }
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  figure.image {
+    display: inline-flex;
+    margin: 0;
+
+    img {
+      margin: 0;
+      border-radius: 0;
+    }
+  }
+
+  /* Hero: CMS paste often omits the background image */
+  > section:first-of-type,
+  > main > section:first-of-type {
+    position: relative;
+    isolation: isolate;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background-image: var(--cms-home-hero-image);
+      background-size: cover;
+      background-position: 67% center;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: linear-gradient(
+        90deg,
+        rgb(7 29 51 / 97%) 0%,
+        rgb(7 29 51 / 90%) 34%,
+        rgb(7 29 51 / 58%) 68%,
+        rgb(7 29 51 / 72%) 100%
+      );
+    }
+
+    > .container {
+      position: relative;
+      z-index: 10;
+    }
+  }
+
+  article {
+    p {
+      margin-bottom: 0;
+    }
+  }
+
+  /* CKEditor paste can leave a stray 15px icon between hero buttons */
+  > section:first-of-type figure.image:has(img[width="15"]),
+  > main > section:first-of-type figure.image:has(img[width="15"]) {
+    display: none;
+  }
+}

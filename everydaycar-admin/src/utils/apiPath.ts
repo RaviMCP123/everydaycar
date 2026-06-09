@@ -1,0 +1,21 @@
+export const ADMIN_ACCOUNT_LOGIN = "auth/login";
+export const ADMIN_FORGOT_PASSWORD = "auth/forgot-password";
+export const ADMIN_RESET_PASSWORD = "auth/reset-password";
+export const UPDATE_PROFILE = "users/update-profile";
+export const UPDATE_PROFILE_IMAGE = "users/update-profile-image";
+export const UPDATE_PASSWORD = "users/update-password";
+export const VERIFY_OTP = "otp/verify";
+export const GET_PROFILE = "users/detail";
+export const GET_ADMIN = "admin";
+export const GET_DASHBOARD_STATS = "dashboard/stats";
+export const GET_PAGE = "page";
+export const GET_BOOK_REPAIR = "book-repair";
+export const GET_CONTACT_REQUEST = "contact";
+export const GET_NETWORK_REGION = "network-region";
+export const GET_NETWORK_REGION_LIST = "network-region/list";
+export const GET_NETWORK_ADDRESS = "network-address";
+export const GET_NETWORK_ADDRESS_LIST = "network-address/list";
+export const GET_CMS_CATEGORY = "cms/category";
+export const GET_CMS_CATEGORY_LIST = "cms/category/list";
+export const GET_CMS_CATEGORY_PLACEMENT_SORT_ORDERS =
+  "cms/category/placement/sort-orders";

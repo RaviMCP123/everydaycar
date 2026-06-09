@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+
+# Environment variables (keep examples)
+.env
+.env.*
+!.env.example
+
+# Logs & debug
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.cursor/debug-*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# TypeScript
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+
+# --- everydaycar-api (NestJS) ---
+everydaycar-api/dist/
+everydaycar-api/public/uploads/*
+# everydaycar-api/public/images/*
+everydaycar-api/public/page-content/*
+!everydaycar-api/public/uploads/.gitkeep
+
+# --- everydaycar-admin (Vite) ---
+everydaycar-admin/dist/
+
+# --- web (Next.js) ---
+web/.next/
+web/out/
+web/build/
+web/next-env.d.ts
+
+# Vercel
+.vercel/
+
+# Misc
+*.pem
+.cache/
+.turbo/
