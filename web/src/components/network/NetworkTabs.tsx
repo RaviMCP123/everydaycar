@@ -7,8 +7,10 @@ export type NetworkTabRepairer = {
   name: string;
   address: string;
   region: string;
+  regionSortOrder?: number;
   status?: string;
   link?: string;
+  email?: string;
   latitude?: number;
   longitude?: number;
   distanceKm?: number | null;
@@ -17,6 +19,7 @@ export type NetworkTabRepairer = {
 type NetworkTab = {
   label: string;
   value: string;
+  sortOrder: number;
 };
 
 type NetworkTabsProps = {
@@ -34,25 +37,21 @@ function sortByDistance(repairers: NetworkTabRepairer[]) {
 }
 
 function getTabs(repairers: NetworkTabRepairer[]): NetworkTab[] {
-  const tabs = Array.from(
+  return Array.from(
     new Map(
       repairers.map((repairer) => [
         repairer.region,
-        { label: repairer.region, value: repairer.region },
+        {
+          label: repairer.region,
+          value: repairer.region,
+          sortOrder: repairer.regionSortOrder ?? Number.MAX_SAFE_INTEGER,
+        },
       ]),
     ).values(),
+  ).sort(
+    (a, b) =>
+      a.sortOrder - b.sortOrder || a.label.localeCompare(b.label),
   );
-
-  const nearest = sortByDistance(repairers).find(
-    (repairer) => repairer.distanceKm != null,
-  );
-  if (!nearest) return tabs;
-
-  const nearestIndex = tabs.findIndex((tab) => tab.value === nearest.region);
-  if (nearestIndex <= 0) return tabs;
-
-  const [nearestTab] = tabs.splice(nearestIndex, 1);
-  return [nearestTab, ...tabs];
 }
 
 export function NetworkTabs({
@@ -69,12 +68,9 @@ export function NetworkTabs({
 
   useEffect(() => {
     if (userSelectedRegionRef.current) return;
-    const nearest = sortByDistance(repairers).find(
-      (repairer) => repairer.distanceKm != null,
-    );
-    const defaultRegion = nearest?.region ?? repairers[0]?.region ?? tabs[0]?.value ?? "";
-    if (defaultRegion) setActiveRegion(defaultRegion);
-  }, [repairers, tabs]);
+    const firstRegion = tabs[0]?.value ?? "";
+    if (firstRegion) setActiveRegion(firstRegion);
+  }, [tabs]);
 
   const filteredRepairers = sortByDistance(
     repairers.filter((repairer) => repairer.region === selectedRegion),

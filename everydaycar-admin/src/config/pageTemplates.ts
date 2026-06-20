@@ -8,6 +8,7 @@ export interface TemplateField {
   multilingual?: boolean; // Default: true
   placeholder?: string;
   helpText?: string;
+  multiline?: boolean;
   options?: Array<{ label: string; value: string }>;
   showWhen?: { key: string; equals: string };
   /** When true (home section CTAs only), SimpleTemplateEditor shows page picker + manual URL. */
@@ -391,7 +392,7 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
     key: "ABOUT_TEMPLATE_V1",
     name: "About Template",
     description:
-      "Reference About page structure: hero, who we are section, and why choose us cards.",
+      "Reference About page structure: hero, who we are, what we do not do, served locations, company facts, join CTA, and why choose us cards.",
     fields: [
       {
         key: "aboutHeroImage",
@@ -434,30 +435,81 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
         label: "Who We Are Section Image",
         required: false,
         multilingual: false,
+        helpText:
+          "Use “Add Section” below to add feature items (icon, title, description).",
       },
-      ...[1, 2, 3].flatMap((index) => [
-        {
-          key: `aboutWhoItem${index}Icon`,
-          type: "image",
-          label: `Who We Are Item ${index} Icon`,
-          required: false,
-          multilingual: false,
-        },
-        {
-          key: `aboutWhoItem${index}Title`,
-          type: "text",
-          label: `Who We Are Item ${index} Title`,
-          required: true,
-          placeholder: `Feature ${index} title`,
-        },
-        {
-          key: `aboutWhoItem${index}Text`,
-          type: "text",
-          label: `Who We Are Item ${index} Description`,
-          required: true,
-          placeholder: `Feature ${index} description`,
-        },
-      ]),
+      {
+        key: "aboutNotDoTitle",
+        type: "text",
+        label: "What We Do Not Do — Title",
+        required: false,
+        placeholder: "What we do not do",
+      },
+      {
+        key: "aboutNotDoText",
+        type: "text",
+        label: "What We Do Not Do — Description",
+        required: false,
+        multiline: true,
+        placeholder:
+          "EverydayCar Repair Network is a repair business. We do not provide insurance advice...",
+      },
+      {
+        key: "aboutServedIntro",
+        type: "text",
+        label: "Served Locations — Intro Text",
+        required: false,
+        placeholder: "EverydayCar Repair Network serves drivers across:",
+        helpText:
+          "Region badges are loaded automatically from Network Regions (max 5, admin sort order).",
+      },
+      {
+        key: "aboutCompanyFactsTitle",
+        type: "text",
+        label: "Company Facts — Section Title",
+        required: false,
+        placeholder: "Company facts",
+      },
+      {
+        key: "aboutCompanyFactsImage",
+        type: "image",
+        label: "Company Facts — Section Image",
+        required: false,
+        multilingual: false,
+        helpText:
+          "Use “Add Section” below to add company fact items (icon, title, description).",
+      },
+      {
+        key: "aboutJoinTitle",
+        type: "text",
+        label: "Join CTA — Title",
+        required: false,
+        placeholder: "Our trading names",
+      },
+      {
+        key: "aboutJoinDescription",
+        type: "text",
+        label: "Join CTA — Description",
+        required: false,
+        multiline: true,
+        placeholder:
+          "EverydayCar Repair Network also operates under the registered trading name Accident Assist Line...",
+      },
+      {
+        key: "aboutJoinButtonText",
+        type: "text",
+        label: "Join CTA — Button Text",
+        required: false,
+        placeholder: "View More",
+      },
+      {
+        key: "aboutJoinButtonLink",
+        type: "link",
+        label: "Join CTA — Button Link",
+        required: false,
+        multilingual: false,
+        placeholder: "https://www.accidentassistline.com.au",
+      },
       {
         key: "aboutWhyTitle",
         type: "text",
@@ -494,18 +546,20 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
       aboutHeroTitle: { en: "About Everyday Car Repair Network" },
       aboutHeroSubtitle: { en: "Australia's premier accident repair network." },
       aboutWhoTitle: { en: "Who We Are and What We Do" },
-      aboutWhoItem1Title: { en: "Reliable repair services" },
-      aboutWhoItem1Text: {
-        en: "Everyday Car Repair Network connects drivers with high-quality approved repairers, towing services and replacement vehicles - handling the entire process from first contact to vehicle collection.",
+      aboutNotDoTitle: { en: "What we do not do" },
+      aboutNotDoText: {
+        en: "EverydayCar Repair Network is a repair business. We do not provide insurance advice and we do not handle, manage or settle insurance claims on behalf of customers. Drivers deal directly with their own insurer — we repair the car.",
       },
-      aboutWhoItem2Title: { en: "Trusted repair partners" },
-      aboutWhoItem2Text: {
-        en: "Our business isn't just about fixing cars - it's about caring for customers, getting their vehicles back on the road with the minimum amount of fuss and maximum amount of care.",
+      aboutServedIntro: {
+        en: "EverydayCar Repair Network serves drivers across:",
       },
-      aboutWhoItem3Title: { en: "Smooth claim support" },
-      aboutWhoItem3Text: {
-        en: "Operating across Victoria, with national expansion underway, we manage vehicle repair referrals through our approved repairer network, providing a broad range of repair solutions to meet the evolving needs of the industry.",
+      aboutCompanyFactsTitle: { en: "Company facts" },
+      aboutJoinTitle: { en: "Our trading names" },
+      aboutJoinDescription: {
+        en: "EverydayCar Repair Network also operates under the registered trading name Accident Assist Line, used to direct drivers to our repair network after an accident.",
       },
+      aboutJoinButtonText: { en: "View More" },
+      aboutJoinButtonLink: "https://www.accidentassistline.com.au",
       aboutWhyTitle: { en: "Why Choose Us" },
       aboutWhyCard1Title: { en: "Authorised Repair Network" },
       aboutWhyCard1Text: {
@@ -617,6 +671,93 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
     },
   },
   {
+    key: "FAQ_TEMPLATE_V1",
+    name: "FAQ Template",
+    description:
+      "Reference FAQ page structure: hero, accordion questions list, and SEO schema.",
+    fields: [
+      {
+        key: "faqHeroImage",
+        type: "image",
+        label: "Hero Image",
+        required: false,
+        multilingual: false,
+      },
+      {
+        key: "faqHeroEyebrow",
+        type: "text",
+        label: "Hero Eyebrow",
+        required: true,
+        placeholder: "Support",
+      },
+      {
+        key: "faqHeroTitle",
+        type: "text",
+        label: "Hero Title",
+        required: true,
+        placeholder: "Frequently Asked Questions",
+      },
+      {
+        key: "faqHeroSubtitle",
+        type: "text",
+        label: "Hero Subtitle",
+        required: true,
+        multiline: true,
+        placeholder:
+          "Find answers about repairs, services, replacement vehicles, and how the EverydayCar Repair Network works.",
+      },
+      {
+        key: "faqListTitle",
+        type: "text",
+        label: "FAQ List Section Title",
+        required: false,
+        placeholder: "Frequently Asked Questions",
+        helpText:
+          "Use “Add Question” below to add FAQ items (question and answer).",
+      },
+    ],
+    sampleContent: {
+      faqHeroEyebrow: { en: "Support" },
+      faqHeroTitle: { en: "Frequently Asked Questions" },
+      faqHeroSubtitle: {
+        en: "Find answers about repairs, services, replacement vehicles, and how the EverydayCar Repair Network works.",
+      },
+      faqListTitle: { en: "Frequently Asked Questions" },
+      faqItems: [
+        {
+          question: { en: "What is EverydayCar Repair Network?" },
+          answer: {
+            en: "EverydayCar Repair Network is an Independent Australian Collision Repair Network founded in 2019, headquartered in Melbourne. We connect drivers with 22 partner repair shops across Victoria, New South Wales, Queensland and the ACT.",
+          },
+        },
+        {
+          question: { en: "Which states does EverydayCar Repair Network service?" },
+          answer: {
+            en: "EverydayCar Repair Network services Victoria, New South Wales, Queensland and the Australian Capital Territory.",
+          },
+        },
+        {
+          question: { en: "How do I contact EverydayCar Repair Network?" },
+          answer: {
+            en: "Phone 1300 721 840 or email info@everydaycarrepair.com.au. Head office is at Level 8, 1341 Dandenong Road, Chadstone VIC 3148.",
+          },
+        },
+        {
+          question: { en: "Does EverydayCar Repair Network handle insurance claims?" },
+          answer: {
+            en: "No. We coordinate repairs, towing and replacement vehicles. Insurance claims are handled directly by your insurer.",
+          },
+        },
+        {
+          question: { en: "Does EverydayCar Repair Network offer replacement vehicles?" },
+          answer: {
+            en: "Yes. Like-for-like replacement vehicles are arranged while your car is being repaired.",
+          },
+        },
+      ],
+    },
+  },
+  {
     key: "NETWORK_TEMPLATE_V1",
     name: "Network Template",
     description:
@@ -638,26 +779,6 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
       { key: "networkJoinButtonText", type: "text", label: "Join CTA Button Text", required: true, placeholder: "Become a Partner" },
       { key: "networkJoinButtonLink", type: "link", label: "Join CTA Button Link", required: true, multilingual: false, placeholder: "/contact", selectPageForRedirect: true },
     ],
-    sampleContent: {
-      networkHeroEyebrow: { en: "Our Network" },
-      networkHeroTitleLine1: { en: "Find Your Nearest" },
-      networkHeroTitleLine2: { en: "Approved Repairer" },
-      networkHeroSubtitle: {
-        en: "Our approved network of repairers is ready across Australia. Find your nearest repairer and book your repair today.",
-      },
-      networkStat1Number: { en: "21+" },
-      networkStat1Label: { en: "Locations Nationwide" },
-      networkStat2Number: { en: "111" },
-      networkStat2Label: { en: "Vic Panel Contractors" },
-      networkStat3Number: { en: "1300 721 840" },
-      networkStat3Label: { en: "Call Us Today" },
-      networkJoinTitle: { en: "Are you a repairer? Join our network." },
-      networkJoinDescription: {
-        en: "We're actively recruiting approved repairers across Victoria. If you operate a licensed repair facility and want a steady stream of referred work, we'd like to hear from you.",
-      },
-      networkJoinButtonText: { en: "Become a Partner" },
-      networkJoinButtonLink: "/contact",
-    },
   },
   {
     key: "CONTACT_TEMPLATE_V1",
@@ -677,7 +798,8 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
       { key: "contactInfoHoursLine2", type: "text", label: "Opening Hours Line 2", required: true, placeholder: "Saturday 9:00am - 1:00pm" },
       { key: "contactFormTitle", type: "text", label: "Form Title", required: true, placeholder: "Send us a message" },
       { key: "contactFormSubmitText", type: "text", label: "Form Submit Button Text", required: true, placeholder: "Send Message ->" },
-      { key: "contactMapOfficeLabel", type: "text", label: "Map Office Label", required: true, placeholder: "Everyday Car Repair Network HQ" },
+      { key: "contactMapOfficeLabel", type: "text", label: "Map Title", required: true, placeholder: "1341 Dandenong Rd" },
+      { key: "contactMapAddress", type: "text", label: "Map Address", required: true, placeholder: "1341 Dandenong Rd, Chadstone VIC 3148, Australia" },
     ],
     sampleContent: {
       contactHeroEyebrow: { en: "Contact Us" },
@@ -688,12 +810,13 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
       contactInfoPhone: { en: "1300 721 840" },
       contactInfoPhoneLabel: { en: "Primary Inbound Number" },
       contactInfoEmail: { en: "info@everydaycarrepair.com.au" },
-      contactInfoAddress: { en: "1341 Dandenong Rd, Chadstone VIC 3148" },
+      contactInfoAddress: { en: "1341 Dandenong Rd, Chadstone VIC 3148, Australia" },
       contactInfoHoursLine1: { en: "Monday - Friday 8:00am - 6:00pm" },
       contactInfoHoursLine2: { en: "Saturday 9:00am - 1:00pm" },
       contactFormTitle: { en: "Send us a message" },
       contactFormSubmitText: { en: "Send Message ->" },
-      contactMapOfficeLabel: { en: "Everyday Car Repair Network HQ" },
+      contactMapOfficeLabel: { en: "1341 Dandenong Rd" },
+      contactMapAddress: { en: "1341 Dandenong Rd, Chadstone VIC 3148, Australia" },
     },
   },
   {
@@ -964,7 +1087,7 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
     key: "FOOTER_TEMPLATE_V1",
     name: "Footer Template",
     description:
-      "Footer structured content: tagline, address, phone, social links, and copyright.",
+      "Footer content shown site-wide: tagline, address, phone, email, and copyright.",
     fields: [
       {
         key: "footerTagline",
@@ -990,11 +1113,13 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
         placeholder: "1300721840",
       },
       {
-        key: "footerGetInTouchTitle",
+        key: "footerEmail",
         type: "text",
-        label: "Get In Touch Title",
-        required: true,
-        placeholder: "Get In Touch",
+        label: "Footer Email",
+        required: false,
+        multilingual: false,
+        placeholder: "info@everydaycarrepair.com.au",
+        helpText: "Displayed below the phone number in the website footer.",
       },
       {
         key: "footerCopyright",
@@ -1005,19 +1130,6 @@ export const PAGE_TEMPLATES: PageTemplate[] = [
           "(c) 2026 Everyday Car Repair Network Pty Ltd | everydaycar.com.au | ABN 68 634 541 058",
       },
     ],
-    sampleContent: {
-      footerTagline: {
-        en: "Australia's trusted accident repair network - connecting drivers with quality approved repairers.",
-      },
-      footerAddress: {
-        en: "Suite 2, 86 High Street, Berwick Victoria 3806",
-      },
-      footerPhone: "1300721840",
-      footerGetInTouchTitle: { en: "Get In Touch" },
-      footerCopyright: {
-        en: "(c) 2026 Everyday Car Repair Network Pty Ltd | everydaycar.com.au | ABN 68 634 541 058",
-      },
-    },
   },
   {
     key: "HOMEPAGE_V1",
@@ -1428,10 +1540,6 @@ export const ADDITIONAL_TEMPLATES: Array<{ value: string; label: string }> = [
     label: "Contact Us",
   },
   {
-    value: "faq",
-    label: "FAQ",
-  },
-  {
     value: "terms-condition",
     label: "Terms & Conditions",
   },
@@ -1465,6 +1573,9 @@ export const getTemplateByKey = (key: string): PageTemplate | undefined => {
   }
   if (key === "legal_page_template" || key === "LEGAL_PAGE_TEMPLATE_V1") {
     return PAGE_TEMPLATES.find((t) => t.key === "LEGAL_PAGE_TEMPLATE_V1");
+  }
+  if (key === "faq_template" || key === "FAQ_TEMPLATE_V1") {
+    return PAGE_TEMPLATES.find((t) => t.key === "FAQ_TEMPLATE_V1");
   }
   if (
     key === "network_template" ||

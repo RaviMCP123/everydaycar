@@ -1,11 +1,10 @@
 import { getCategories } from "@/lib/api/cms";
 import type { NavLink } from "@/lib/api/types";
 import {
-  categoriesToNavLinks,
-  categorySlugToHref,
+  buildFooterNav,
+  buildHeaderNav,
   DEFAULT_FOOTER_NAV,
   DEFAULT_HEADER_NAV,
-  sortCategoriesByPlacement,
 } from "./routes";
 
 export type SiteNavigation = {
@@ -20,20 +19,9 @@ export async function fetchSiteNavigation(): Promise<SiteNavigation> {
       getCategories({ status: true, placement: "footer" }),
     ]);
 
-    const headerFromApi = categoriesToNavLinks(headerCategories);
-    const footerFromApi = sortCategoriesByPlacement(footerCategories, "footer")
-      .filter((cat) => cat.slug)
-      .map((cat) => ({
-        label: cat.name,
-        href: categorySlugToHref(cat.slug),
-      }));
-
     return {
-      header: [
-        { label: "Home", href: "/" },
-        ...(headerFromApi.length > 0 ? headerFromApi : DEFAULT_HEADER_NAV.slice(1)),
-      ],
-      footer: footerFromApi.length > 0 ? footerFromApi : DEFAULT_FOOTER_NAV,
+      header: buildHeaderNav(headerCategories),
+      footer: buildFooterNav(footerCategories),
     };
   } catch {
     return {

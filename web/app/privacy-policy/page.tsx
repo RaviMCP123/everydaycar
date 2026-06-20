@@ -26,14 +26,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function PrivacyPolicyPage() {
-  const page = await getPageBySlug(PAGE_SLUGS.privacy).catch(() => null);
-
-  return (
-    <CmsPageLoader
-      slug={PAGE_SLUGS.privacy}
-      eyebrow="Legal"
-      initialPage={page}
-    />
-  );
+export default function PrivacyPolicyPage() {
+  return <CmsPageLoader slug={PAGE_SLUGS.privacy} eyebrow="Legal" />;
 }

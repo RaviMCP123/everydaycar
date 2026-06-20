@@ -11,6 +11,7 @@ import {
   ListIcon,
   MailIcon,
   PageIcon,
+  PlugInIcon,
   UserCircleIcon,
 } from "../icons";
 
@@ -51,6 +52,11 @@ const getNavItems = (t: (key: string) => string): NavItem[] => [
     icon: BoxCubeIcon,
     name: t("sidebar.networkAddresses"),
     path: "/network-addresses",
+  },
+  {
+    icon: PlugInIcon,
+    name: t("sidebar.smtpCredentials"),
+    path: "/settings/email-credentials",
   },
   { icon: UserCircleIcon, name: t("sidebar.profile"), path: "/profile" },
 ];
@@ -167,7 +173,7 @@ const AppSidebar: React.FC = () => {
           {(isExpanded || isHovered || isMobileOpen) && (
             <img
               className="h-8 sm:h-10"
-              src={`${import.meta.env.BASE_URL}images/logo/everydaycar-logo.svg`}
+              src={`${import.meta.env.BASE_URL}images/logo.png`}
               alt="everydaycar"
             />
           )}

@@ -4,6 +4,12 @@ export type AboutWhoItem = {
   text: string;
 };
 
+export type AboutCompanyFactsItem = {
+  icon?: string;
+  title?: string;
+  text: string;
+};
+
 export type AboutWhyCard = {
   icon?: string;
   title: string;
@@ -18,6 +24,16 @@ export type AboutStructuredContent = {
   whoTitle?: string;
   whoImage?: string;
   whoItems: AboutWhoItem[];
+  notDoTitle?: string;
+  notDoText?: string;
+  servedIntro?: string;
+  companyFactsTitle?: string;
+  companyFactsImage?: string;
+  companyFactsItems: AboutCompanyFactsItem[];
+  joinTitle?: string;
+  joinDescription?: string;
+  joinButtonText?: string;
+  joinButtonLink?: string;
   whyTitle?: string;
   whyCards: AboutWhyCard[];
 };
@@ -35,24 +51,82 @@ function localizedToString(value: unknown): string {
   return "";
 }
 
+function parseLegacyWhoItems(raw: Record<string, unknown>): AboutWhoItem[] {
+  const items: AboutWhoItem[] = [];
+
+  for (let i = 1; i <= 20; i += 1) {
+    const text = localizedToString(raw[`aboutWhoItem${i}Text`]).trim();
+    if (!text) continue;
+    items.push({
+      icon:
+        localizedToString(raw[`aboutWhoItem${i}Icon`]).trim() || undefined,
+      title:
+        localizedToString(raw[`aboutWhoItem${i}Title`]).trim() || undefined,
+      text,
+    });
+  }
+
+  return items;
+}
+
+function parseWhoItems(raw: Record<string, unknown>): AboutWhoItem[] {
+  if (Array.isArray(raw.aboutWhoItems)) {
+    return raw.aboutWhoItems
+      .map((entry) => {
+        const item =
+          entry && typeof entry === "object"
+            ? (entry as Record<string, unknown>)
+            : null;
+        if (!item) return null;
+
+        const text = localizedToString(item.text).trim();
+        if (!text) return null;
+
+        return {
+          icon: localizedToString(item.icon).trim() || undefined,
+          title: localizedToString(item.title).trim() || undefined,
+          text,
+        };
+      })
+      .filter(Boolean) as AboutWhoItem[];
+  }
+
+  return parseLegacyWhoItems(raw);
+}
+
+function parseCompanyFactsItems(raw: Record<string, unknown>): AboutCompanyFactsItem[] {
+  if (!Array.isArray(raw.aboutCompanyFactsItems)) {
+    return [];
+  }
+
+  return raw.aboutCompanyFactsItems
+    .map((entry) => {
+      const item =
+        entry && typeof entry === "object"
+          ? (entry as Record<string, unknown>)
+          : null;
+      if (!item) return null;
+
+      const text = localizedToString(item.text).trim();
+      if (!text) return null;
+
+      return {
+        icon: localizedToString(item.icon).trim() || undefined,
+        title: localizedToString(item.title).trim() || undefined,
+        text,
+      };
+    })
+    .filter(Boolean) as AboutCompanyFactsItem[];
+}
+
 /** Convert About template `page.content` into typed props for web components. */
 export function parseAboutStructuredContent(
   raw: Record<string, unknown> | undefined | null,
 ): AboutStructuredContent | null {
   if (!raw || typeof raw !== "object") return null;
 
-  const whoItems = [1, 2, 3]
-    .map((i) => {
-      const text = localizedToString(raw[`aboutWhoItem${i}Text`]).trim();
-      if (!text) return null;
-      return {
-        icon: localizedToString(raw[`aboutWhoItem${i}Icon`]).trim() || undefined,
-        title:
-          localizedToString(raw[`aboutWhoItem${i}Title`]).trim() || undefined,
-        text,
-      };
-    })
-    .filter(Boolean) as AboutWhoItem[];
+  const whoItems = parseWhoItems(raw);
+  const companyFactsItems = parseCompanyFactsItems(raw);
 
   const whyCards = [1, 2, 3, 4]
     .map((i) => {
@@ -75,6 +149,21 @@ export function parseAboutStructuredContent(
     whoTitle: localizedToString(raw.aboutWhoTitle).trim() || undefined,
     whoImage: localizedToString(raw.aboutWhoImage).trim() || undefined,
     whoItems,
+    notDoTitle: localizedToString(raw.aboutNotDoTitle).trim() || undefined,
+    notDoText: localizedToString(raw.aboutNotDoText).trim() || undefined,
+    servedIntro: localizedToString(raw.aboutServedIntro).trim() || undefined,
+    companyFactsTitle:
+      localizedToString(raw.aboutCompanyFactsTitle).trim() || undefined,
+    companyFactsImage:
+      localizedToString(raw.aboutCompanyFactsImage).trim() || undefined,
+    companyFactsItems,
+    joinTitle: localizedToString(raw.aboutJoinTitle).trim() || undefined,
+    joinDescription:
+      localizedToString(raw.aboutJoinDescription).trim() || undefined,
+    joinButtonText:
+      localizedToString(raw.aboutJoinButtonText).trim() || undefined,
+    joinButtonLink:
+      localizedToString(raw.aboutJoinButtonLink).trim() || undefined,
     whyTitle: localizedToString(raw.aboutWhyTitle).trim() || undefined,
     whyCards,
   };
@@ -82,8 +171,15 @@ export function parseAboutStructuredContent(
   const hasData =
     Boolean(content.heroTitle) ||
     Boolean(content.whoTitle) ||
+    Boolean(content.notDoTitle) ||
+    Boolean(content.notDoText) ||
+    Boolean(content.servedIntro) ||
+    Boolean(content.companyFactsTitle) ||
+    Boolean(content.joinTitle) ||
+    Boolean(content.joinDescription) ||
     Boolean(content.whyTitle) ||
     whoItems.length > 0 ||
+    companyFactsItems.length > 0 ||
     whyCards.length > 0;
 
   return hasData ? content : null;

@@ -3,11 +3,7 @@
 import { useEffect, useState } from "react";
 import type { NavLink } from "@/lib/api/types";
 import { fetchCategoriesClient } from "@/lib/api/cms";
-import {
-  categoriesToNavLinks,
-  categorySlugToHref,
-  sortCategoriesByPlacement,
-} from "@/lib/cms/routes";
+import { buildFooterNav, buildHeaderNav } from "@/lib/cms/routes";
 
 type CmsNavigationLoaderProps = {
   initialHeader: NavLink[];
@@ -34,23 +30,15 @@ export function CmsNavigationLoader({
     ]).then(([headerCategories, footerCategories]) => {
       if (cancelled) return;
 
-      const headerFromApi = categoriesToNavLinks(headerCategories);
-      const footerFromApi = sortCategoriesByPlacement(footerCategories, "footer")
-        .filter((cat) => cat.slug)
-        .map((cat) => ({
-          label: cat.name,
-          href: categorySlugToHref(cat.slug),
-        }));
+      const headerNav = buildHeaderNav(headerCategories);
+      const footerNav = buildFooterNav(footerCategories);
 
-      if (headerFromApi.length > 0) {
-        onHeaderChange([
-          { label: "Home", href: "/" },
-          ...headerFromApi,
-        ]);
+      if (headerNav.length > 0) {
+        onHeaderChange(headerNav);
       }
 
-      if (footerFromApi.length > 0) {
-        onFooterChange(footerFromApi);
+      if (footerNav.length > 0) {
+        onFooterChange(footerNav);
       }
 
       setTick((n) => n + 1);

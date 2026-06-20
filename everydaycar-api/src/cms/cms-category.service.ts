@@ -15,6 +15,12 @@ import {
 } from "./dto/cms-category.dto";
 import * as _ from "lodash";
 
+type LinkedPageRef = {
+  title?: unknown;
+  slug?: string;
+  category?: string;
+};
+
 @Injectable()
 export class CmsCategoryService {
   constructor(
@@ -641,21 +647,79 @@ export class CmsCategoryService {
       throw new NotFoundException("CMS Category not found");
     }
 
-    // Check if category is being used by any pages
-    // Pages reference categories by slug in the 'category' field
-    if (category.slug) {
-      const pagesUsingCategory = await this.pageModel.countDocuments({
-        category: category.slug,
-      });
+    const linkedPages = await this.findPagesUsingCategory(category.slug);
+    if (linkedPages.length > 0) {
+      const pageLabels = linkedPages
+        .map((page) => {
+          const title = page.title;
+          if (typeof title === "string" && title.trim()) {
+            return title.trim();
+          }
+          if (title && typeof title === "object") {
+            const localized =
+              (title as Record<string, string>).en ||
+              Object.values(title as Record<string, string>).find(
+                (value) => typeof value === "string" && value.trim(),
+              );
+            if (typeof localized === "string" && localized.trim()) {
+              return localized.trim();
+            }
+          }
+          return page.slug || page.category || "Untitled page";
+        })
+        .slice(0, 5);
 
-      if (pagesUsingCategory > 0) {
-        throw new BadRequestException(
-          "Cannot delete category. It is being used by one or more pages.",
-        );
-      }
+      const suffix =
+        linkedPages.length > pageLabels.length
+          ? ` and ${linkedPages.length - pageLabels.length} more`
+          : "";
+
+      throw new BadRequestException(
+        `Cannot delete category. It is being used by ${linkedPages.length} CMS page(s): ${pageLabels.join(", ")}${suffix}. Delete those pages first.`,
+      );
     }
 
     await this.cmsCategoryModel.findByIdAndDelete(id);
+  }
+
+  private async findPagesUsingCategory(
+    categorySlug?: string | null,
+  ): Promise<LinkedPageRef[]> {
+    const slugToMatch = String(categorySlug || "").trim().toLowerCase();
+    if (!slugToMatch) {
+      return [];
+    }
+
+    const pages = (await this.pageModel
+      .find({ category: { $exists: true, $nin: [null, ""] } })
+      .select("title slug category")
+      .lean()
+      .exec()) as LinkedPageRef[];
+
+    return pages.filter((page) => {
+      const pageCategory = String(page.category || "").trim().toLowerCase();
+      if (!pageCategory) return false;
+      if (pageCategory === slugToMatch) return true;
+      if (
+        pageCategory.startsWith(`${slugToMatch}-`) ||
+        pageCategory.startsWith(`${slugToMatch}_`)
+      ) {
+        return true;
+      }
+      if (
+        slugToMatch.startsWith(`${pageCategory}-`) ||
+        slugToMatch.startsWith(`${pageCategory}_`)
+      ) {
+        return true;
+      }
+      const slugFirstWord = slugToMatch.split(/[-_]/)[0];
+      const pageFirstWord = pageCategory.split(/[-_]/)[0];
+      return Boolean(
+        slugFirstWord &&
+          slugFirstWord === pageFirstWord &&
+          slugFirstWord.length > 2,
+      );
+    });
   }
 
   /**

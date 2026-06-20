@@ -287,6 +287,7 @@ const Index: React.FC = () => {
         )}
         {open && (
           <FormComponent
+            key={typeItem?.id || (typeItem as any)?._id || "create"}
             isOpen={open}
             closeModal={() => setOpen(false)}
             item={typeItem}

@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Icon } from "@/src/components/ui/Icon";
+import { isUploadedCmsMedia } from "@/lib/cms/cms-uploaded-media";
 import { resolveMediaUrl } from "@/lib/images";
+import { Icon } from "@/src/components/ui/Icon";
 
 type HeroSectionProps = {
   imageSrc?: string;
@@ -28,7 +29,10 @@ export function HeroSection(props: HeroSectionProps = {}) {
     secondaryButtonText: props.secondaryButtonText?.trim() || "",
     secondaryButtonHref: props.secondaryButtonHref?.trim() || "",
     badgeImages:
-      props.badgeImages?.filter((s) => s.trim()).map(resolveMediaUrl) ?? [],
+      props.badgeImages
+        ?.filter((src) => isUploadedCmsMedia(src))
+        .map((src) => resolveMediaUrl(src.trim()))
+        .filter(Boolean) ?? [],
   };
 
   return (
@@ -45,7 +49,7 @@ export function HeroSection(props: HeroSectionProps = {}) {
       ) : null}
       <div className="absolute inset-0 !bg-[linear-gradient(90deg,rgba(7,29,51,0.72)_0%,rgba(7,29,51,0.5)_42%,rgba(7,29,51,0.86)_70%,rgba(7,29,51,0.95)_100%)] md:!bg-[linear-gradient(90deg,_#071d330a_0%,_#071d3314_43%,_#071d33c2_66%,_#071d33f0_100%)]" />
       <div className="container relative z-10 flex min-h-[calc(100svh-var(--header-height))] items-stretch justify-end py-8 sm:py-10 md:py-12 lg:py-14">
-        <div className="flex w-full max-w-[640px] flex-col justify-between gap-10 lg:w-[52%]">
+        <div className="flex w-full max-w-[740px] flex-col justify-between gap-10 lg:w-[54%]">
           {copy.badgeImages.length > 0 ? (
             <div
               className="flex flex-wrap items-start gap-x-7 gap-y-4"
@@ -82,7 +86,7 @@ export function HeroSection(props: HeroSectionProps = {}) {
               </h1>
             ) : null}
             {copy.subtitle ? (
-              <p className="max-w-[520px] text-[16px] font-medium leading-7 text-white/78">
+              <p className="max-w-[620px] text-[16px] font-medium leading-7 text-white/78">
                 {copy.subtitle}
               </p>
             ) : null}

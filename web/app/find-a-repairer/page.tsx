@@ -25,7 +25,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function FindARepairerPage() {
-  const page = await getPageBySlug(PAGE_SLUGS.findARepairer).catch(() => null);
-  return <FindARepairerPageContent page={page} />;
+export default function FindARepairerPage() {
+  return <FindARepairerPageContent />;
 }

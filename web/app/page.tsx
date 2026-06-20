@@ -24,14 +24,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Home() {
-  const page = await getPageBySlug(PAGE_SLUGS.home).catch(() => null);
-
-  if (!page) {
-    return null;
-  }
-
-  return (
-    <CmsPageLoader slug={PAGE_SLUGS.home} eyebrow="Home" initialPage={page} />
-  );
+export default function Home() {
+  return <CmsPageLoader slug={PAGE_SLUGS.home} eyebrow="Home" />;
 }

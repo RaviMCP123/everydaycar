@@ -55,7 +55,7 @@ export default function ForgotPasswordForm() {
         <div className="mb-4 sm:mb-6 md:mb-8 text-center">
           <Link to="/" className="inline-block mb-3 sm:mb-4 md:mb-6 transition-transform hover:scale-105">
             <img
-              src="/images/logo/everydaycar-logo-dark.svg"
+              src="/images/logo.png"
               alt="everydaycar"
               className="h-10 sm:h-12 md:h-14 mx-auto"
             />

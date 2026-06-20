@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Form, Input, Modal, Skeleton } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { PlusCircleOutlined } from "@ant-design/icons";
+import { HolderOutlined, PlusCircleOutlined } from "@ant-design/icons";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import ActionFilter from "@components/Table/Action";
+import DraggableRow from "@components/Table/DraggableRow";
 import IconButton from "@components/Table/IconButton";
 import SwitchComponent from "@components/Table/Switch";
 import TableContainer from "@components/Table/TableContainer";
@@ -11,29 +14,40 @@ import PageMeta from "@components/common/PageMeta";
 import {
   useCreateNetworkRegionMutation,
   useDeleteNetworkRegionMutation,
-  useGetNetworkRegionsQuery,
+  useGetNetworkRegionListQuery,
+  useReorderNetworkRegionsMutation,
   useUpdateNetworkRegionMutation,
   useUpdateNetworkRegionStatusMutation,
 } from "@services/networkRegionApi";
 import type { NetworkRegion } from "interface/networkRegion";
 import showToast from "@utils/toast";
-import { PAGE_LIMIT } from "@utils/constant/common";
 import { formatDate } from "@utils/dateFormat";
 
+function sortRegions(rows: NetworkRegion[]) {
+  return [...rows].sort((a, b) => {
+    const orderDiff = (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+    if (orderDiff !== 0) return orderDiff;
+    return (a.name || "").localeCompare(b.name || "");
+  });
+}
+
 const NetworkRegionPage: React.FC = () => {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_LIMIT);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<NetworkRegion | null>(null);
   const [name, setName] = useState("");
-  const { data, isLoading } = useGetNetworkRegionsQuery({ page, limit: pageSize });
+  const [orderedRows, setOrderedRows] = useState<NetworkRegion[]>([]);
+  const { data, isLoading } = useGetNetworkRegionListQuery();
   const [createRegion, { isLoading: creating }] = useCreateNetworkRegionMutation();
   const [updateRegion, { isLoading: updating }] = useUpdateNetworkRegionMutation();
   const [updateStatus] = useUpdateNetworkRegionStatusMutation();
   const [deleteRegion] = useDeleteNetworkRegionMutation();
+  const [reorderRegions] = useReorderNetworkRegionsMutation();
 
-  const rows = data?.data?.results ?? [];
-  const total = data?.data?.pagination?.total ?? 0;
+  const rows = useMemo(() => sortRegions(data?.data ?? []), [data?.data]);
+
+  useEffect(() => {
+    setOrderedRows(rows);
+  }, [rows]);
 
   const openAdd = () => {
     setEditing(null);
@@ -60,7 +74,44 @@ const NetworkRegionPage: React.FC = () => {
     }
   };
 
+  const moveRow = useCallback(
+    async (dragIndex: number, hoverIndex: number) => {
+      if (dragIndex === hoverIndex) return;
+
+      const nextRows = [...orderedRows];
+      const [dragged] = nextRows.splice(dragIndex, 1);
+      nextRows.splice(hoverIndex, 0, dragged);
+      setOrderedRows(nextRows);
+
+      const ids = nextRows
+        .map((row) => row._id || row.id)
+        .filter((id): id is string => Boolean(id));
+
+      try {
+        await reorderRegions({ ids }).unwrap();
+      } catch (error: any) {
+        showToast(error?.data?.message || "Failed to reorder regions.", "error");
+        setOrderedRows(rows);
+      }
+    },
+    [orderedRows, reorderRegions, rows],
+  );
+
   const columns: ColumnsType<NetworkRegion> = [
+    {
+      title: "",
+      key: "sort",
+      width: 48,
+      render: () => (
+        <HolderOutlined className="cursor-move text-gray-400" />
+      ),
+    },
+    {
+      title: "Order",
+      key: "sortOrder",
+      width: 72,
+      render: (_, __, index) => <span>{index + 1}</span>,
+    },
     { title: "Region Name", dataIndex: "name", key: "name" },
     {
       title: "Created Date",
@@ -109,7 +160,10 @@ const NetworkRegionPage: React.FC = () => {
       <PageMeta title="Network Regions" />
       <PageBreadcrumb pageTitle="Network Regions" />
       <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
-        <div className="mb-2 flex items-center justify-end">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Drag rows to set the region order shown on the website.
+          </p>
           <IconButton
             handleButtonAction={openAdd}
             title="Add Region"
@@ -119,24 +173,24 @@ const NetworkRegionPage: React.FC = () => {
         {isLoading ? (
           <Skeleton active paragraph={{ rows: 6 }} />
         ) : (
-          <TableContainer<NetworkRegion>
-            columns={columns as any}
-            data={rows}
-            emptyText="Data Not Available"
-            pagination={{
-              current: page,
-              pageSize,
-              total,
-              showSizeChanger: true,
-              pageSizeOptions: ["10", "20", "50", "100"],
-              showTotal: (totalItems, range) =>
-                `${range[0]}-${range[1]} of ${totalItems} records`,
-            }}
-            onChange={(pagination) => {
-              setPage(pagination.current || 1);
-              setPageSize(pagination.pageSize || PAGE_LIMIT);
-            }}
-          />
+          <DndProvider backend={HTML5Backend}>
+            <TableContainer<NetworkRegion>
+              columns={columns as any}
+              data={orderedRows}
+              emptyText="Data Not Available"
+              pagination={false}
+              onChange={() => undefined}
+              components={{
+                body: {
+                  row: DraggableRow,
+                },
+              }}
+              onRow={(_, index) => ({
+                index: index ?? 0,
+                moveRow,
+              })}
+            />
+          </DndProvider>
         )}
       </div>
       <Modal

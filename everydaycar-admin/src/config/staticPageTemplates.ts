@@ -13,6 +13,7 @@ export const STATIC_PAGE_TEMPLATES = [
   { value: "find_a_repairer_template", label: "Find a Repairer Template" },
   { value: "contact_template", label: "Contact Page Template" },
   { value: "legal_page_template", label: "Legal Page Template" },
+  { value: "faq_template", label: "FAQ Page Template" },
   // { value: "contactus_template", label: "Contact Us Template" },
   // { value: "page_template", label: "Generic Page Template" },
   // { value: "innerpage_template", label: "Inner Page Template" },
@@ -33,6 +34,7 @@ export const PAGE_LIKE_CANONICAL_KEYS: StaticPageTemplateKey[] = [
   "find_a_repairer_template",
   "contact_template",
   "legal_page_template",
+  "faq_template",
   // "page_template",
   // "portfolio_template",
 ];
@@ -44,7 +46,8 @@ const LEGACY_TO_FOUR: Record<string, string> = {
   HOMEPAGE_V1: "home_template",
   "contact-us": "contactus_template",
   "footer-template": "footer_template",
-  faq: "page_template",
+  faq: "faq_template",
+  faqs: "faq_template",
   "terms-condition": "legal_page_template",
   "terms-and-conditions": "legal_page_template",
   "privacy-policy": "legal_page_template",
@@ -74,6 +77,7 @@ export function canonicalizeStaticTemplateKey(
     k === "find_a_repairer_template" ||
     k === "contact_template" ||
     k === "legal_page_template" ||
+    k === "faq_template" ||
     k === "page_template" ||
     k === "innerpage_template" ||
     k === "portfolio_template" ||
@@ -116,6 +120,7 @@ export function isPageWithSectionsTemplate(key: string | undefined): boolean {
     key === "find_a_repairer_template" ||
     key === "contact_template" ||
     key === "legal_page_template" ||
+    key === "faq_template" ||
     key === "page_template" ||
     key === "portfolio_template" ||
     key === "PAGE_TEMPLATE_V1"
@@ -154,6 +159,8 @@ const CATEGORY_TO_TEMPLATE_KEY: Record<string, StaticPageTemplateKey> = {
   "privacy-policy": "legal_page_template",
   "terms-and-conditions": "legal_page_template",
   "terms-condition": "legal_page_template",
+  faq: "faq_template",
+  faqs: "faq_template",
   footer: "footer_template",
 };
 

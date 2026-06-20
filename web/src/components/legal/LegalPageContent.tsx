@@ -4,6 +4,7 @@ import {
   parseLegalStructuredContent,
   prepareLegalBodyHtml,
 } from "@/lib/cms/parse-legal-content";
+import { LinkifiedHtml } from "@/src/components/cms/LinkifiedHtml";
 import { LegalHero } from "@/src/components/legal/LegalHero";
 
 type LegalPageContentProps = {
@@ -42,9 +43,10 @@ export function LegalPageContent({ page }: LegalPageContentProps) {
             {page.customCss?.trim() ? (
               <style dangerouslySetInnerHTML={{ __html: page.customCss }} />
             ) : null}
-            <div
+            <LinkifiedHtml
+              html={bodyHtml}
               className="legal-page-content"
-              dangerouslySetInnerHTML={{ __html: bodyHtml }}
+              linkifyOnly
             />
           </div>
         </main>

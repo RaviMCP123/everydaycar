@@ -26,14 +26,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function TermsAndConditionsPage() {
-  const page = await getPageBySlug(PAGE_SLUGS.terms).catch(() => null);
-
-  return (
-    <CmsPageLoader
-      slug={PAGE_SLUGS.terms}
-      eyebrow="Legal"
-      initialPage={page}
-    />
-  );
+export default function TermsAndConditionsPage() {
+  return <CmsPageLoader slug={PAGE_SLUGS.terms} eyebrow="Legal" />;
 }

@@ -1,6 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import type { PageDetail } from "@/lib/api/types";
+import { useCmsPage } from "@/lib/cms/use-cms-page";
 import { parseBookRepairStructuredContent } from "@/lib/cms/parse-book-repair-content";
+import { PAGE_SLUGS } from "@/lib/cms/routes";
 import { resolveMediaUrl } from "@/lib/images";
 import { BookingSection } from "@/src/components/booking/BookingSection";
 import { Icon } from "@/src/components/ui/Icon";
@@ -9,7 +13,11 @@ type RepairBookingPageContentProps = {
   page?: PageDetail | null;
 };
 
-export function RepairBookingPageContent({ page = null }: RepairBookingPageContentProps) {
+export function RepairBookingPageContent({
+  page: initialPage = null,
+}: RepairBookingPageContentProps) {
+  const page = useCmsPage(PAGE_SLUGS.bookARepair, initialPage);
+
   const structured =
     page?.content && typeof page.content === "object"
       ? parseBookRepairStructuredContent(page.content as Record<string, unknown>)

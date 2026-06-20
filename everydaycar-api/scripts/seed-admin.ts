@@ -12,7 +12,7 @@ import UserSchema from "../src/users/user.schema";
 
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
-const DEFAULT_EMAIL = "admin@everydaycar.local";
+const DEFAULT_EMAIL = "info@everydaycarrepair.com.au";
 const DEFAULT_PASSWORD = "Admin@12345";
 
 function envOr(key: string, fallback: string): string {

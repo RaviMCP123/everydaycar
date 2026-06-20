@@ -38,21 +38,30 @@ export function NetworkHero({
       <div className="container relative z-10 grid min-h-[300px] md:grid-cols-2">
         <div className="flex items-center">
           <div className="flex w-full max-w-[620px] flex-col gap-3 py-12 pr-8">
-            <div className="mb-[12px] flex items-center gap-3">
-              <span className="h-px w-[30px] bg-white/70" />
-              <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-white">
-                {eyebrow?.trim() || "Our Network"}
-              </p>
-            </div>
-            <h1 className="max-w-[460px] text-[clamp(32px,4vw,44px)] font-bold leading-[1.06] tracking-normal">
-              {titleLine1?.trim() || "Find Your Nearest"}
-              <span className="block">{titleLine2?.trim() || "Approved Repairer"}</span>
-            </h1>
-            <span className="mt-[12px] block h-px w-[34px] bg-white/70" />
-            <p className="mt-[13px] max-w-[520px] text-[14px] font-medium leading-[24px] text-white/75">
-              {subtitle?.trim() ||
-                "Our approved network of repairers is ready across Australia. Find your nearest repairer and book your repair today."}
-            </p>
+            {eyebrow?.trim() ? (
+              <div className="mb-[12px] flex items-center gap-3">
+                <span className="h-px w-[30px] bg-white/70" />
+                <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-white">
+                  {eyebrow}
+                </p>
+              </div>
+            ) : null}
+            {titleLine1?.trim() || titleLine2?.trim() ? (
+              <h1 className="max-w-[460px] text-[clamp(32px,4vw,44px)] font-bold leading-[1.06] tracking-normal">
+                {titleLine1?.trim() || null}
+                {titleLine2?.trim() ? (
+                  <span className="block">{titleLine2}</span>
+                ) : null}
+              </h1>
+            ) : null}
+            {subtitle?.trim() ? (
+              <>
+                <span className="mt-[12px] block h-px w-[34px] bg-white/70" />
+                <p className="mt-[13px] max-w-[520px] text-[14px] font-medium leading-[24px] text-white/75">
+                  {subtitle}
+                </p>
+              </>
+            ) : null}
           </div>
         </div>
         <div className="relative min-h-[260px] overflow-hidden md:hidden">

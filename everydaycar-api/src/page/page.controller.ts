@@ -788,7 +788,32 @@ export class PageController {
     pageData = await this.processBannerImage(pageData, files);
     pageData = await this.processFeaturedImage(pageData, files);
 
-    if (pageData.content) {
+    const hasContentUploads = files?.some(
+      (file) => file.fieldname && file.fieldname.startsWith("content."),
+    );
+
+    if (pageData.content || hasContentUploads) {
+      pageData.content = pageData.content || {};
+      if (
+        pageData.content.aboutWhoItems &&
+        Array.isArray(pageData.content.aboutWhoItems)
+      ) {
+        pageData.content.aboutWhoItems =
+          await this.processAboutWhoItemsImages(
+            pageData.content.aboutWhoItems,
+            files,
+          );
+      }
+      if (
+        pageData.content.aboutCompanyFactsItems &&
+        Array.isArray(pageData.content.aboutCompanyFactsItems)
+      ) {
+        pageData.content.aboutCompanyFactsItems =
+          await this.processAboutCompanyFactsItemsImages(
+            pageData.content.aboutCompanyFactsItems,
+            files,
+          );
+      }
       pageData.content = await this.processContentImages(
         pageData.content,
         files,
@@ -878,11 +903,89 @@ export class PageController {
           );
         }
         const key = file.fieldname.replace(/^content\./, "");
+        if (/^aboutWhoItem-\d+-icon$/.test(key)) {
+          continue;
+        }
+        if (/^aboutCompanyFactsItem-\d+-icon$/.test(key)) {
+          continue;
+        }
         processedContent[key] = saveUploadedImageFile(file);
       }
     }
 
     return processedContent;
+  }
+
+  /**
+   * Processes uploaded icons for aboutWhoItems array entries.
+   * Handles fieldnames like "content.aboutWhoItem-0-icon".
+   */
+  private async processAboutWhoItemsImages(
+    items: any[],
+    files: Express.Multer.File[],
+  ): Promise<any[]> {
+    const processedItems = items.map((item) => ({ ...item }));
+
+    for (const file of files) {
+      if (!file.fieldname || !file.fieldname.startsWith("content.")) {
+        continue;
+      }
+
+      const key = file.fieldname.replace(/^content\./, "");
+      const match = key.match(/^aboutWhoItem-(\d+)-icon$/);
+      if (!match) {
+        continue;
+      }
+
+      if (!file.mimetype || !file.mimetype.startsWith("image/")) {
+        throw new Error(
+          `Invalid file type for ${file.fieldname}. Only image files are allowed. Received: ${file.mimetype}`,
+        );
+      }
+
+      const index = parseInt(match[1], 10);
+      if (index >= 0 && index < processedItems.length) {
+        processedItems[index].icon = saveUploadedImageFile(file);
+      }
+    }
+
+    return processedItems;
+  }
+
+  /**
+   * Processes uploaded icons for aboutCompanyFactsItems array entries.
+   * Handles fieldnames like "content.aboutCompanyFactsItem-0-icon".
+   */
+  private async processAboutCompanyFactsItemsImages(
+    items: any[],
+    files: Express.Multer.File[],
+  ): Promise<any[]> {
+    const processedItems = items.map((item) => ({ ...item }));
+
+    for (const file of files) {
+      if (!file.fieldname || !file.fieldname.startsWith("content.")) {
+        continue;
+      }
+
+      const key = file.fieldname.replace(/^content\./, "");
+      const match = key.match(/^aboutCompanyFactsItem-(\d+)-icon$/);
+      if (!match) {
+        continue;
+      }
+
+      if (!file.mimetype || !file.mimetype.startsWith("image/")) {
+        throw new Error(
+          `Invalid file type for ${file.fieldname}. Only image files are allowed. Received: ${file.mimetype}`,
+        );
+      }
+
+      const index = parseInt(match[1], 10);
+      if (index >= 0 && index < processedItems.length) {
+        processedItems[index].icon = saveUploadedImageFile(file);
+      }
+    }
+
+    return processedItems;
   }
 
   /**

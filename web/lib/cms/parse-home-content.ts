@@ -1,4 +1,5 @@
 import { htmlToPlainText } from "@/lib/cms/content";
+import { isUploadedCmsMedia } from "@/lib/cms/cms-uploaded-media";
 
 export type HomeJoinCtaContent = {
   iconSrc?: string;
@@ -20,7 +21,7 @@ export type HomeStructuredContent = {
   heroSecondaryButtonLink?: string;
   heroBadgeImages?: string[];
   trustBarTitle?: string;
-  trustItems?: Array<{ image?: string; label: string }>;
+  trustItems?: Array<{ image: string; label: string }>;
   valueKicker?: string;
   valueTitle?: string;
   valueDescription?: string;
@@ -54,17 +55,20 @@ export function parseHomeStructuredContent(
     .map((i) => {
       const label = localizedToString(raw[`trustItem${i}Label`]).trim();
       const icon = localizedToString(raw[`trustItem${i}Icon`]).trim();
-      if (!label) return null;
-      return { label, image: icon || undefined };
+      if (!label || !isUploadedCmsMedia(icon)) return null;
+      return { label, image: icon };
     })
-    .filter(Boolean) as Array<{ label: string; image?: string }>;
+    .filter(Boolean) as Array<{ label: string; image: string }>;
 
   const heroBadgeImages = [1, 2, 3, 4]
     .map((i) => localizedToString(raw[`heroBadge${i}Image`]).trim())
-    .filter(Boolean);
+    .filter(isUploadedCmsMedia);
+
+  const heroImageRaw = localizedToString(raw.heroImage).trim();
+  const joinIconRaw = localizedToString(raw.joinIcon).trim();
 
   const content: HomeStructuredContent = {
-    heroImage: localizedToString(raw.heroImage).trim() || undefined,
+    heroImage: isUploadedCmsMedia(heroImageRaw) ? heroImageRaw : undefined,
     heroKicker: localizedToString(raw.heroKicker).trim() || undefined,
     heroTitleLine1: localizedToString(raw.heroTitleLine1).trim() || undefined,
     heroTitleLine2: localizedToString(raw.heroTitleLine2).trim() || undefined,
@@ -83,7 +87,7 @@ export function parseHomeStructuredContent(
     valueKicker: localizedToString(raw.valueKicker).trim() || undefined,
     valueTitle: localizedToString(raw.valueTitle).trim() || undefined,
     valueDescription: localizedToString(raw.valueDescription).trim() || undefined,
-    joinIcon: localizedToString(raw.joinIcon).trim() || undefined,
+    joinIcon: isUploadedCmsMedia(joinIconRaw) ? joinIconRaw : undefined,
     joinTitle: localizedToString(raw.joinTitle).trim() || undefined,
     joinSubtitle: localizedToString(raw.joinSubtitle).trim() || undefined,
     joinButtonText: localizedToString(raw.joinButtonText).trim() || undefined,
@@ -98,6 +102,15 @@ export function parseHomeStructuredContent(
     Boolean(content.joinTitle);
 
   return hasData ? content : null;
+}
+
+export function isHomePageTemplate(templateKey?: string): boolean {
+  const key = (templateKey || "").trim().toLowerCase();
+  return (
+    key === "home_template" ||
+    key === "homepage_v1" ||
+    key === "home_template_v1"
+  );
 }
 
 function getPublicBasePath(): string {

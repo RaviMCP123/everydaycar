@@ -61,7 +61,7 @@ export default function SignInForm() {
             className="inline-block mb-3 sm:mb-4 md:mb-6 transition-transform hover:scale-105"
           >
             <img
-              src="/images/logo/everydaycar-logo-dark.svg"
+              src="/images/logo.png"
               alt="everydaycar"
               className="h-10 sm:h-12 md:h-14 mx-auto"
             />

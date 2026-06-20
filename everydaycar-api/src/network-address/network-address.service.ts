@@ -38,6 +38,7 @@ export class NetworkAddressService {
       regionId: new Types.ObjectId(dto.regionId),
       address: dto.address,
       link: dto.link || "",
+      email: dto.email?.trim() || "",
       statusText: dto.statusText || "Approved",
       latitude: dto.latitude,
       longitude: dto.longitude,
@@ -69,7 +70,7 @@ export class NetworkAddressService {
     const [results, total] = await Promise.all([
       this.networkAddressModel
         .find(filter)
-        .populate("regionId", "name status")
+        .populate("regionId", "name status sortOrder")
         .sort(sort)
         .skip((page - 1) * limit)
         .limit(limit)
@@ -85,7 +86,7 @@ export class NetworkAddressService {
     if (typeof status === "boolean") filter.status = status;
     return this.networkAddressModel
       .find(filter)
-      .populate("regionId", "name status")
+      .populate("regionId", "name status sortOrder")
       .sort({ createdAt: -1 })
       .lean()
       .exec();
@@ -94,7 +95,7 @@ export class NetworkAddressService {
   async findPublicList() {
     return this.networkAddressModel
       .find({ status: true })
-      .populate("regionId", "name status")
+      .populate("regionId", "name status sortOrder")
       .sort({ createdAt: -1 })
       .lean()
       .exec();
@@ -116,6 +117,7 @@ export class NetworkAddressService {
             : {}),
           ...(dto.address !== undefined ? { address: dto.address } : {}),
           ...(dto.link !== undefined ? { link: dto.link } : {}),
+          ...(dto.email !== undefined ? { email: dto.email.trim() } : {}),
           ...(dto.statusText !== undefined
             ? { statusText: dto.statusText }
             : {}),
@@ -125,7 +127,7 @@ export class NetworkAddressService {
         },
         { new: true },
       )
-      .populate("regionId", "name status")
+      .populate("regionId", "name status sortOrder")
       .exec();
 
     if (!updated) throw new NotFoundException("Address not found.");

@@ -18,6 +18,7 @@ import { ContactModule } from "./contact/contact.module";
 import { BookRepairModule } from "./book-repair/book-repair.module";
 import { NetworkRegionModule } from "./network-region/network-region.module";
 import { NetworkAddressModule } from "./network-address/network-address.module";
+import { GeocodeModule } from "./geocode/geocode.module";
 
 dotenv.config();
 
@@ -26,13 +27,13 @@ async function bootstrap() {
     // SSL FILE LOCATION
   const httpsOptions = {
     key: readFileSync(
-      '/home/xbetpool/ssl/private/everydaycar.cloudpulsetech.in.key',
+      '/home/quities/ssl/private/api.everydaycarrepair.com.au.key',
     ),
     cert: readFileSync(
-      '/home/xbetpool/ssl/cert/everydaycar.cloudpulsetech.in.crt',
+      '/home/quities/ssl/cert/api.everydaycarrepair.com.au.crt',
     ),
     ca: readFileSync(
-      '/home/xbetpool/ssl/cert/everydaycar.cloudpulsetech.in-ca.crt',
+      '/home/quities/ssl/cert/api.everydaycarrepair.com.au-ca.crt',
     ),
   };
   const app = await NestFactory.create<NestExpressApplication>(AppModule,{
@@ -103,6 +104,7 @@ async function bootstrap() {
       BookRepairModule,
       NetworkRegionModule,
       NetworkAddressModule,
+      GeocodeModule,
     ],
     deepScanRoutes: true,
   });

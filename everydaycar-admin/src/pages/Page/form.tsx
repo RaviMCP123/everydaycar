@@ -18,6 +18,7 @@ import type { UploadFile } from "antd/es/upload/interface";
 import { normalizeImageUrl } from "@utils/imageUrl";
 import showToast from "@utils/toast";
 import { preparePageHtmlForSave } from "@utils/htmlContent";
+import { validateRequiredTemplateFields } from "@utils/validateTemplateFields";
 import SimpleTemplateEditor from "@components/SimpleTemplateEditor";
 import { getTemplateByKey } from "@config/pageTemplates";
 import {
@@ -49,6 +50,7 @@ const extractStringFromNested = (val: any): string => {
 type NetworkRegionAddressItem = {
   address: Record<string, string>;
   link: string;
+  email?: string;
   status: string;
 };
 
@@ -69,11 +71,226 @@ type NetworkAddressListItem = {
       };
   address?: Record<string, string>;
   link?: string;
+  email?: string;
   statusText?: string;
   latitude?: number;
   longitude?: number;
   status?: boolean;
 };
+
+type AboutWhoItemContent = {
+  icon?: string;
+  title?: Record<string, string> | string;
+  text?: Record<string, string> | string;
+};
+
+type AboutCompanyFactsItemContent = {
+  icon?: string;
+  title?: Record<string, string> | string;
+  text?: Record<string, string> | string;
+};
+
+const aboutWhoItemIconKey = (index: number) => `aboutWhoItem-${index}-icon`;
+const aboutCompanyFactsItemIconKey = (index: number) =>
+  `aboutCompanyFactsItem-${index}-icon`;
+
+function scrollToPageEditorItem(elementId: string) {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.getElementById(elementId)?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    });
+  });
+}
+
+function isPersistableImageUrl(url: string | undefined | null): url is string {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  return trimmed.length > 0 && !trimmed.startsWith("blob:");
+}
+
+function isTemplateImageContentKey(key: string, templateKey?: string): boolean {
+  const lower = key.toLowerCase();
+  if (
+    lower.includes("image") ||
+    lower.includes("photo") ||
+    lower.includes("picture") ||
+    /icon$/i.test(key)
+  ) {
+    return true;
+  }
+  if (!templateKey) return false;
+  const template = getTemplateByKey(templateKey);
+  return template?.fields.some((field) => field.key === key && field.type === "image") ?? false;
+}
+
+function getUploadFileImageUrl(file: UploadFile | undefined): string {
+  if (!file) return "";
+  const candidate = file.url || file.thumbUrl;
+  return isPersistableImageUrl(candidate) ? candidate.trim() : "";
+}
+
+function resolveTemplateImageUrl(
+  fieldKey: string,
+  fileList: UploadFile[] | undefined,
+  contentSources: Array<Record<string, any> | undefined | null>,
+): string {
+  const fromFile = getUploadFileImageUrl(fileList?.[0]);
+  if (fromFile) return fromFile;
+
+  for (const source of contentSources) {
+    const value = source?.[fieldKey];
+    if (typeof value === "string" && isPersistableImageUrl(value)) {
+      return value.trim();
+    }
+  }
+
+  return "";
+}
+
+function applyTemplateImageFieldToContent(
+  fieldKey: string,
+  options: {
+    fileList: UploadFile[] | undefined;
+    explicitlyRemoved: boolean;
+    contentSources: Array<Record<string, any> | undefined | null>;
+    isEditing: boolean;
+    existingContent: Record<string, any> | undefined | null;
+    formDataFiles: Record<string, File>;
+    templateContent: Record<string, any>;
+  },
+): void {
+  const {
+    fileList,
+    explicitlyRemoved,
+    contentSources,
+    isEditing,
+    existingContent,
+    formDataFiles,
+    templateContent,
+  } = options;
+  const file = fileList?.[0];
+
+  if (explicitlyRemoved) {
+    templateContent[fieldKey] = "";
+    return;
+  }
+
+  if (file?.originFileObj) {
+    formDataFiles[fieldKey] = file.originFileObj;
+    delete templateContent[fieldKey];
+    return;
+  }
+
+  // On create, never persist image URLs from a previous edit session — only new uploads.
+  if (!isEditing) {
+    delete templateContent[fieldKey];
+    return;
+  }
+
+  const resolvedUrl = resolveTemplateImageUrl(fieldKey, fileList, contentSources);
+  if (resolvedUrl) {
+    templateContent[fieldKey] = resolvedUrl;
+    return;
+  }
+
+  if (isEditing) {
+    const existing = existingContent?.[fieldKey];
+    if (typeof existing === "string" && existing.trim()) {
+      templateContent[fieldKey] = existing.trim();
+    }
+  }
+}
+
+function migrateLegacyAboutWhoItems(content: Record<string, any>): AboutWhoItemContent[] {
+  if (Array.isArray(content.aboutWhoItems) && content.aboutWhoItems.length > 0) {
+    return content.aboutWhoItems;
+  }
+
+  const items: AboutWhoItemContent[] = [];
+  for (let i = 1; i <= 20; i += 1) {
+    const title = content[`aboutWhoItem${i}Title`];
+    const text = content[`aboutWhoItem${i}Text`];
+    const icon = content[`aboutWhoItem${i}Icon`];
+    if (!title && !text && !icon) continue;
+    items.push({
+      title: title || {},
+      text: text || {},
+      icon: typeof icon === "string" ? icon : "",
+    });
+  }
+  return items;
+}
+
+function attachAboutWhoItemImageFiles(
+  items: AboutWhoItemContent[],
+  imageFilesMap: Record<string, UploadFile[]>,
+) {
+  items.forEach((item, index) => {
+    const icon = typeof item.icon === "string" ? item.icon.trim() : "";
+    if (!icon) return;
+    const key = aboutWhoItemIconKey(index);
+    imageFilesMap[key] = [
+      {
+        uid: `existing-${key}`,
+        name: icon.split("/").pop() || `icon-${index}.png`,
+        status: "done",
+        url: normalizeImageUrl(icon),
+      },
+    ];
+  });
+}
+
+function attachAboutCompanyFactsItemImageFiles(
+  items: AboutCompanyFactsItemContent[],
+  imageFilesMap: Record<string, UploadFile[]>,
+) {
+  items.forEach((item, index) => {
+    const icon = typeof item.icon === "string" ? item.icon.trim() : "";
+    if (!icon) return;
+    const key = aboutCompanyFactsItemIconKey(index);
+    imageFilesMap[key] = [
+      {
+        uid: `existing-${key}`,
+        name: icon.split("/").pop() || `icon-${index}.png`,
+        status: "done",
+        url: normalizeImageUrl(icon),
+      },
+    ];
+  });
+}
+
+type FaqItemContent = {
+  question?: Record<string, string> | string;
+  answer?: Record<string, string> | string;
+};
+
+function migrateFaqItems(
+  content: Record<string, any>,
+  legacySections?: FaqSection[],
+): FaqItemContent[] {
+  if (Array.isArray(content.faqItems) && content.faqItems.length > 0) {
+    return content.faqItems;
+  }
+
+  if (!Array.isArray(legacySections) || legacySections.length === 0) {
+    return [];
+  }
+
+  const items: FaqItemContent[] = [];
+  legacySections.forEach((section) => {
+    (section.questions || []).forEach((qa) => {
+      if (!qa?.question && !qa?.answer) return;
+      items.push({
+        question: qa.question || {},
+        answer: qa.answer || {},
+      });
+    });
+  });
+  return items;
+}
 
 const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = [] }) => {
   const languageList = ADMIN_LANGUAGE_LIST;
@@ -209,6 +426,12 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
   const isNetworkTemplate =
     currentTemplateKey === "network_template" ||
     currentTemplateKey === "our_network_template";
+  const isAboutTemplate =
+    currentTemplateKey === "about_template" ||
+    currentTemplateKey === "ABOUT_TEMPLATE_V1";
+  const isFaqTemplate =
+    currentTemplateKey === "faq_template" ||
+    currentTemplateKey === "FAQ_TEMPLATE_V1";
 
   // Calculate sortOrder when placement changes or allPages loads
   // This handles both initial load and when user changes placement
@@ -291,6 +514,7 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
 
   // State for template image uploads
   const [templateImageFiles, setTemplateImageFiles] = useState<Record<string, UploadFile[]>>({});
+  const [removedTemplateImages, setRemovedTemplateImages] = useState<Record<string, boolean>>({});
   const [networkRegions, setNetworkRegions] = useState<NetworkRegionItem[]>([]);
   const { data: networkAddressListData } = useGetNetworkAddressListQuery(undefined, {
     skip: !isOpen,
@@ -315,6 +539,7 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
       item.addresses.push({
         address: row.address && typeof row.address === "object" ? row.address : { en: "" },
         link: row.link || "",
+        email: row.email || "",
         status: row.statusText || "Approved",
       });
     });
@@ -401,10 +626,9 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                 normalizedContent[key] = value;
               }
             } else if (typeof value === 'string') {
-              const isImageField =
-                                   key.toLowerCase().includes('image') || 
-                                   key.toLowerCase().includes('photo') || 
-                                   key.toLowerCase().includes('picture');
+              const itemTemplateKey =
+                item.templateKey || getDefaultTemplateKeyForCategory(item.category);
+              const isImageField = isTemplateImageContentKey(key, itemTemplateKey);
               const isUrl = value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/');
               
               if (isImageField && isUrl && value.trim() !== '') {
@@ -448,9 +672,26 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
             }
           });
         }
+
+        const migratedAboutWhoItems = migrateLegacyAboutWhoItems(normalizedContent);
+        normalizedContent.aboutWhoItems = migratedAboutWhoItems;
+        attachAboutWhoItemImageFiles(migratedAboutWhoItems, imageFilesMap);
+
+        const companyFactsItems = Array.isArray(normalizedContent.aboutCompanyFactsItems)
+          ? (normalizedContent.aboutCompanyFactsItems as AboutCompanyFactsItemContent[])
+          : [];
+        normalizedContent.aboutCompanyFactsItems = companyFactsItems;
+        attachAboutCompanyFactsItemImageFiles(companyFactsItems, imageFilesMap);
+
+        const migratedFaqItems = migrateFaqItems(
+          normalizedContent,
+          item.faqSections,
+        );
+        normalizedContent.faqItems = migratedFaqItems;
         
         // Set image files state
         setTemplateImageFiles(imageFilesMap);
+        setRemovedTemplateImages({});
 
         const itemTemplateKey =
           item.templateKey || getDefaultTemplateKeyForCategory(item.category);
@@ -602,12 +843,13 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
         // Robots Follow - Default to true if not set
         setRobotsFollow((item as any)?.robotsFollow !== undefined ? (item as any).robotsFollow : true);
     } else {
-        // Reset form for new page
+        // Reset form for new page (clear content so a prior edit session cannot leak image URLs)
         reset({
           category: "",
           templateKey: "",
           title: "",
           description: " ",
+          content: {},
           showFirstName: true,
           showLastName: true,
           showPhoneNumber: true,
@@ -616,7 +858,13 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
           showJobTitle: true,
           showComments: true,
         });
+        setValue("content", {}, { shouldDirty: false, shouldTouch: false });
         setTemplateImageFiles({});
+        setRemovedTemplateImages({});
+        setBannerImage([]);
+        setBannerImageRemoved(false);
+        setPageSections([]);
+        setPageSectionImages({});
         setNetworkRegions([]);
         // Reset SEO fields
         setMetaTitle({});
@@ -770,6 +1018,9 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
   const [pageSectionErrors, setPageSectionErrors] = useState<
     Record<number, { description?: string; image?: string }>
   >({});
+  const [templateFieldErrors, setTemplateFieldErrors] = useState<
+    Record<string, string>
+  >({});
 
   // Footer Template State
   const [footerDescription, setFooterDescription] = useState<Record<string, string>>((item as any)?.footerDescription || {});
@@ -785,6 +1036,7 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
     (item as any)?.bannerDescription || {}
   );
   const [bannerImage, setBannerImage] = useState<UploadFile[]>([]);
+  const [bannerImageRemoved, setBannerImageRemoved] = useState(false);
   const leftSideTextValue =
     typeof watch("description") === "string" ? (watch("description") as string) : "";
   const hasLeftSideText = leftSideTextValue.trim().length > 0;
@@ -809,6 +1061,7 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
       if ((item as any)?.bannerDescription) {
         setBannerDescription((item as any).bannerDescription || {});
       }
+      setBannerImageRemoved(false);
       if ((item as any)?.bannerImage) {
         const bannerImageUrl = (item as any).bannerImage;
         if (bannerImageUrl && typeof bannerImageUrl === 'string' && bannerImageUrl.trim() !== '') {
@@ -996,6 +1249,27 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
       return;
     }
 
+    if (templateConfig) {
+      const currentTemplateContent = (watch("content") || {}) as Record<string, any>;
+      const requiredFieldErrors = validateRequiredTemplateFields(
+        templateConfig,
+        currentTemplateContent,
+        templateImageFiles,
+        languageList,
+      );
+      if (Object.keys(requiredFieldErrors).length > 0) {
+        setTemplateFieldErrors(requiredFieldErrors);
+        const firstErrorKey = Object.keys(requiredFieldErrors)[0];
+        const langSuffix = firstErrorKey.match(/-([a-z]{2})$/i);
+        if (langSuffix?.[1]) {
+          setActiveLang(langSuffix[1]);
+        }
+        showToast("Please fill in all required fields.", "error");
+        return;
+      }
+      setTemplateFieldErrors({});
+    }
+
     if (isNetworkTemplate) {
       const effectiveNetworkRegions =
         managerDrivenNetworkRegions.length > 0
@@ -1130,16 +1404,15 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
       // - Otherwise: preserve existing images
       let images: string[] = [];
       if (fileList.length === 0) {
-        // Image was removed
-        images = [];
+        images = existingImages;
       } else {
         const hasNewUpload = fileList.some(file => file.originFileObj);
         if (hasNewUpload) {
           // New upload will replace existing, so don't send old URLs
           images = [];
         } else {
-          // No new upload, preserve existing images
-          images = existingImages;
+          const previewUrl = getUploadFileImageUrl(fileList[0]);
+          images = previewUrl ? [previewUrl] : existingImages;
         }
       }
       
@@ -1167,11 +1440,7 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
         : "";
     const hasNewBannerUpload =
       isPageTemplate && bannerImage.length > 0 && !!bannerImage[0]?.originFileObj;
-    const isBannerRemoved =
-      isPageTemplate &&
-      isEditing &&
-      !!(item as any)?.bannerImage &&
-      bannerImage.length === 0;
+    const isBannerRemoved = isPageTemplate && isEditing && bannerImageRemoved;
     const shouldKeepExistingBannerUrl =
       !!bannerUrlFromState &&
       !hasNewBannerUpload &&
@@ -1197,7 +1466,13 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
     } : {};
 
     // Collect template content and handle file uploads
-    const templateContent: Record<string, any> = {};
+    const watchedContent = (watch("content" as any) || {}) as Record<string, any>;
+    const templateContent: Record<string, any> = isEditing
+      ? {
+          ...(item?.content ? { ...item.content } : {}),
+          ...watchedContent,
+        }
+      : { ...watchedContent };
     const formDataFiles: Record<string, File> = {}; // Store files separately for FormData
     
     if (selectedTemplate && templateConfig) {
@@ -1206,23 +1481,15 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
         const multilingual = field.multilingual !== false;
         
         if (field.type === "image") {
-          // Handle image uploads
-          const fileList = templateImageFiles[field.key];
-          if (fileList && fileList.length > 0) {
-            const file = fileList[0];
-            // Check if it's a new file upload (has originFileObj)
-            if (file.originFileObj) {
-              // New file upload - add to FormData files
-              // The file will be sent as multipart/form-data
-              formDataFiles[field.key] = file.originFileObj;
-            } else if (file.url && typeof file.url === 'string' && file.url.trim() !== '') {
-              // Existing image URL - keep the URL in content
-              templateContent[field.key] = file.url;
-            }
-          } else if (isEditing) {
-            // Explicitly clear previously saved image when removed in edit mode.
-            templateContent[field.key] = "";
-          }
+          applyTemplateImageFieldToContent(field.key, {
+            fileList: templateImageFiles[field.key],
+            explicitlyRemoved: Boolean(removedTemplateImages[field.key]),
+            contentSources: [watchedContent, isEditing ? item?.content : undefined],
+            isEditing,
+            existingContent: item?.content,
+            formDataFiles,
+            templateContent,
+          });
         } else if (multilingual) {
           // Get the value directly from content object (already structured as {en: "value", es: "value"})
           const contentValue = watch('content' as any)?.[field.key];
@@ -1285,6 +1552,85 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
         managerDrivenNetworkRegions.length > 0
           ? managerDrivenNetworkRegions
           : networkRegions;
+    }
+
+    if (isAboutTemplate) {
+      const rawItems = watch("content")?.aboutWhoItems;
+      const items = Array.isArray(rawItems) ? rawItems : [];
+      templateContent.aboutWhoItems = items.map((whoItem, index) => {
+        const iconKey = aboutWhoItemIconKey(index);
+        const fileList = templateImageFiles[iconKey];
+        let icon = typeof whoItem?.icon === "string" ? whoItem.icon.trim() : "";
+
+        if (removedTemplateImages[iconKey]) {
+          icon = "";
+        } else if (fileList?.[0]?.originFileObj) {
+          formDataFiles[iconKey] = fileList[0].originFileObj;
+        } else {
+          const fromFile = getUploadFileImageUrl(fileList?.[0]);
+          if (fromFile) {
+            icon = fromFile;
+          } else if (isEditing) {
+            const existingItems = item?.content?.aboutWhoItems;
+            const existingIcon = Array.isArray(existingItems)
+              ? existingItems[index]?.icon
+              : undefined;
+            if (typeof existingIcon === "string" && existingIcon.trim()) {
+              icon = existingIcon.trim();
+            }
+          }
+        }
+
+        return {
+          ...whoItem,
+          icon,
+        };
+      });
+
+      for (let i = 1; i <= 20; i += 1) {
+        delete templateContent[`aboutWhoItem${i}Icon`];
+        delete templateContent[`aboutWhoItem${i}Title`];
+        delete templateContent[`aboutWhoItem${i}Text`];
+      }
+
+      const rawCompanyFactsItems = watch("content")?.aboutCompanyFactsItems;
+      const companyFactsItems = Array.isArray(rawCompanyFactsItems)
+        ? rawCompanyFactsItems
+        : [];
+      templateContent.aboutCompanyFactsItems = companyFactsItems.map((factsItem, index) => {
+        const iconKey = aboutCompanyFactsItemIconKey(index);
+        const fileList = templateImageFiles[iconKey];
+        let icon = typeof factsItem?.icon === "string" ? factsItem.icon.trim() : "";
+
+        if (removedTemplateImages[iconKey]) {
+          icon = "";
+        } else if (fileList?.[0]?.originFileObj) {
+          formDataFiles[iconKey] = fileList[0].originFileObj;
+        } else {
+          const fromFile = getUploadFileImageUrl(fileList?.[0]);
+          if (fromFile) {
+            icon = fromFile;
+          } else if (isEditing) {
+            const existingItems = item?.content?.aboutCompanyFactsItems;
+            const existingIcon = Array.isArray(existingItems)
+              ? existingItems[index]?.icon
+              : undefined;
+            if (typeof existingIcon === "string" && existingIcon.trim()) {
+              icon = existingIcon.trim();
+            }
+          }
+        }
+
+        return {
+          ...factsItem,
+          icon,
+        };
+      });
+    }
+
+    if (isFaqTemplate) {
+      const rawFaqItems = watch("content")?.faqItems;
+      templateContent.faqItems = Array.isArray(rawFaqItems) ? rawFaqItems : [];
     }
 
     // Convert title to simple string
@@ -1563,6 +1909,7 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                           setValue("templateKey", nextTemplateKey);
                           setValue("content", {}, { shouldDirty: false, shouldTouch: false });
                           setTemplateImageFiles({});
+                          setRemovedTemplateImages({});
                           if (
                             nextTemplateKey === "network_template" ||
                             nextTemplateKey === "our_network_template"
@@ -1612,6 +1959,7 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                       if (!isEditing) {
                         setValue("content", {}, { shouldDirty: false, shouldTouch: false });
                         setTemplateImageFiles({});
+                        setRemovedTemplateImages({});
                         if (
                           nextTemplateKey === "network_template" ||
                           nextTemplateKey === "our_network_template"
@@ -1706,14 +2054,87 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                   languageList={languageList}
                   activeLang={activeLang}
                   content={watch('content') || {}}
+                  fieldErrors={templateFieldErrors}
                   onContentChange={(key, value, _lang) => {
+                    setTemplateFieldErrors((prev) => {
+                      if (Object.keys(prev).length === 0) return prev;
+                      const next = { ...prev };
+                      delete next[key];
+                      Object.keys(next).forEach((errorKey) => {
+                        if (errorKey.startsWith(`${key}-`)) {
+                          delete next[errorKey];
+                        }
+                      });
+                      return next;
+                    });
                     // value is already the full multilingual object { en: "...", es: "..." }
                     // Set the entire object for the field key
                     setValue(`content.${key}` as any, value);
                   }}
                   imageFiles={templateImageFiles}
                   onImageChange={(key, files) => {
+                    setTemplateFieldErrors((prev) => {
+                      if (!prev[key]) return prev;
+                      const next = { ...prev };
+                      delete next[key];
+                      return next;
+                    });
                     setTemplateImageFiles((prev) => ({ ...prev, [key]: files }));
+                    const persistedPreviewUrl = getUploadFileImageUrl(files[0]);
+                    if (files.length === 0) {
+                      setRemovedTemplateImages((prev) => ({ ...prev, [key]: true }));
+                    } else {
+                      setRemovedTemplateImages((prev) => {
+                        const next = { ...prev };
+                        delete next[key];
+                        return next;
+                      });
+                    }
+                    if (persistedPreviewUrl) {
+                      setValue(`content.${key}` as any, persistedPreviewUrl, {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                      });
+                    } else if (files.length === 0) {
+                      const isDynamicItemIcon =
+                        /^about(?:Who|CompanyFacts)Item-\d+-icon$/.test(key);
+                      if (!isDynamicItemIcon) {
+                        setValue(`content.${key}` as any, "", {
+                          shouldDirty: true,
+                          shouldTouch: true,
+                        });
+                      }
+
+                      const whoMatch = key.match(/^aboutWhoItem-(\d+)-icon$/);
+                      if (whoMatch) {
+                        const index = Number(whoMatch[1]);
+                        const items = Array.isArray(watch("content")?.aboutWhoItems)
+                          ? [...watch("content").aboutWhoItems]
+                          : [];
+                        if (items[index]) {
+                          items[index] = { ...items[index], icon: "" };
+                          setValue("content.aboutWhoItems" as any, items, {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                          });
+                        }
+                      }
+
+                      const factsMatch = key.match(/^aboutCompanyFactsItem-(\d+)-icon$/);
+                      if (factsMatch) {
+                        const index = Number(factsMatch[1]);
+                        const items = Array.isArray(watch("content")?.aboutCompanyFactsItems)
+                          ? [...watch("content").aboutCompanyFactsItems]
+                          : [];
+                        if (items[index]) {
+                          items[index] = { ...items[index], icon: "" };
+                          setValue("content.aboutCompanyFactsItems" as any, items, {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                          });
+                        }
+                      }
+                    }
                   }}
                   allPages={allPages}
                   excludePageId={item?.id || (item as any)?._id}
@@ -1782,6 +2203,9 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                           };
                         });
                         setBannerImage(processedFileList);
+                        if (processedFileList.length > 0) {
+                          setBannerImageRemoved(false);
+                        }
                       }}
                       onPreview={(file) => {
                         // Handle preview click - show image in modal
@@ -1817,6 +2241,7 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                       }}
                       onRemove={() => {
                         setBannerImage([]);
+                        setBannerImageRemoved(true);
                       }}
                       maxCount={1}
                     >
@@ -1939,7 +2364,11 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                 </div>
 
                 {pageSections && pageSections.length > 0 ? pageSections.map((section, sectionIndex) => (
-                  <div key={`section-${sectionIndex}`} className="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <div
+                    key={`section-${sectionIndex}`}
+                    id={`page-section-${sectionIndex}`}
+                    className="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <h6 className="text-md font-semibold text-gray-700 dark:text-white/80">
                         Section {sectionIndex + 1}
@@ -2310,8 +2739,10 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                     size="sm"
                     variant="outline"
                     onClick={() => {
+                      const nextIndex = pageSections.length;
                       const newSections = [...pageSections, { title: {}, description: {} }];
                       setPageSections(newSections);
+                      scrollToPageEditorItem(`page-section-${nextIndex}`);
                     }}
                   >
                     <PlusOutlined className="mr-1" />
@@ -2544,28 +2975,19 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
               </>
             )}
 
-            {/* FAQ Sections (Only show when template is faq) */}
-            {isFaq && (
+            {/* FAQ Sections (legacy editor — hidden when FAQ template is selected) */}
+            {isFaq && !isTemplateMode && (
               <div className="px-6 pt-6 pb-4">
-                <div className="flex items-center justify-between mb-6">
-                  <h5 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                    FAQ Sections
-                  </h5>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      const newSections = [...faqSections, { heading: {}, questions: [] }];
-                      setFaqSections(newSections);
-                    }}
-                  >
-                    <PlusOutlined className="mr-1" />
-                    Add Section
-                  </Button>
-                </div>
+                <h5 className="text-lg font-semibold text-gray-800 dark:text-white/90 mb-6">
+                  FAQ Sections
+                </h5>
 
                 {faqSections.map((section, sectionIndex) => (
-                  <div key={sectionIndex} className="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <div
+                    key={sectionIndex}
+                    id={`faq-section-${sectionIndex}`}
+                    className="mb-6 p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <h6 className="text-md font-semibold text-gray-700 dark:text-white/80">
                         Section {sectionIndex + 1}
@@ -2620,30 +3042,14 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
 
                     {/* Questions in Section */}
                     <div className="mb-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <Label>Questions & Answers</Label>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            const newSections = [...faqSections];
-                            newSections[sectionIndex] = {
-                              ...newSections[sectionIndex],
-                              questions: [
-                                ...(newSections[sectionIndex].questions || []),
-                                { question: {}, answer: {} },
-                              ],
-                            };
-                            setFaqSections(newSections);
-                          }}
-                        >
-                          <PlusOutlined className="mr-1" />
-                          Add Q&A
-                        </Button>
-          </div>
+                      <Label className="mb-3 block">Questions & Answers</Label>
 
                       {(section.questions || []).map((qa, qaIndex) => (
-                        <div key={qaIndex} className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div
+                          key={qaIndex}
+                          id={`faq-qa-${sectionIndex}-${qaIndex}`}
+                          className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                        >
                           <div className="flex items-center justify-between mb-3">
                             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                               Q&A {qaIndex + 1}
@@ -2732,9 +3138,50 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                           </Form.Group>
                         </div>
                       ))}
+
+                      <div className="flex justify-center mt-3">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const nextQaIndex = (section.questions || []).length;
+                            const newSections = [...faqSections];
+                            newSections[sectionIndex] = {
+                              ...newSections[sectionIndex],
+                              questions: [
+                                ...(newSections[sectionIndex].questions || []),
+                                { question: {}, answer: {} },
+                              ],
+                            };
+                            setFaqSections(newSections);
+                            scrollToPageEditorItem(
+                              `faq-qa-${sectionIndex}-${nextQaIndex}`,
+                            );
+                          }}
+                        >
+                          <PlusOutlined className="mr-1" />
+                          Add Q&A
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
+
+                <div className="flex justify-center mt-4">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const nextIndex = faqSections.length;
+                      const newSections = [...faqSections, { heading: {}, questions: [] }];
+                      setFaqSections(newSections);
+                      scrollToPageEditorItem(`faq-section-${nextIndex}`);
+                    }}
+                  >
+                    <PlusOutlined className="mr-1" />
+                    Add Section
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -2903,14 +3350,13 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                             [lang.code]: e.target.value,
                           }));
                         }}
-                        placeholder="Enter meta title (recommended: 50-60 characters)"
-                        maxLength={60}
+                        placeholder="Enter meta title"
                       />
                     ),
                   }))}
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Recommended: 50-60 characters. Leave empty to use page title.
+                  Leave empty to use page title.
                 </p>
               </Form.Group>
 
@@ -2937,14 +3383,13 @@ const Index: React.FC<FormProps> = ({ isOpen, closeModal, item, existingPages = 
                             [lang.code]: e.target.value,
                           }));
                         }}
-                        placeholder="Enter meta description (recommended: 150-160 characters)"
-                        maxLength={160}
+                        placeholder="Enter meta description"
                       />
                     ),
                   }))}
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Recommended: 150-160 characters. Leave empty to use page description.
+                  Leave empty to use page description.
                 </p>
               </Form.Group>
 

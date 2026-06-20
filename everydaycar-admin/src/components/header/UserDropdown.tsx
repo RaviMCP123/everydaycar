@@ -25,23 +25,25 @@ export default function UserDropdown() {
     dispatch(logoutAccount());
   };
   return (
-    <div className="relative">
+    <div className="relative w-full lg:w-auto">
       <button
         onClick={toggleDropdown}
-        className="flex items-center text-white dropdown-toggle"
+        className="dropdown-toggle flex w-full items-center text-white lg:w-auto"
       >
-        <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
+        <span className="mr-3 h-11 w-11 shrink-0 overflow-hidden rounded-full">
           <img src={user?.image_thumb_url} alt={user?.firstName} />
         </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">
-          {`${user?.firstName} ${user?.lastName}`}
-          <div className="text-xs font-normal opacity-75 ml-0">
+        <span className="mr-1 block min-w-0 flex-1 text-left font-medium text-theme-sm lg:flex-none">
+          <span className="block truncate">
+            {`${user?.firstName} ${user?.lastName}`}
+          </span>
+          <span className="ml-0 block text-xs font-normal opacity-75">
             {user?.role_id === 1 ? "Super Admin" : "Sub Admin"}
-          </div>
+          </span>
         </span>
         <svg
-          className={`stroke-white/80 transition-transform duration-200 ${
+          className={`shrink-0 stroke-white/80 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
           }`}
           width="18"
@@ -63,7 +65,7 @@ export default function UserDropdown() {
       <Dropdown
         isOpen={isOpen}
         onClose={closeDropdown}
-        className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
+        className="left-0 top-[calc(100%+0.75rem)] flex w-[min(260px,calc(100vw-1.5rem))] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark lg:left-auto lg:right-0"
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">

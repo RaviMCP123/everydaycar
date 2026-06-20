@@ -8,6 +8,10 @@ import {
   type PublicNetworkAddress,
 } from "@/lib/api/network-address";
 import { deriveLocationName } from "@/lib/network/derive-location-name";
+import {
+  resolveRegionName,
+  resolveRegionSortOrder,
+} from "@/lib/network/resolve-region";
 import { useNearbyRepairers } from "@/lib/network/use-nearby-repairers";
 import type { NetworkTabRepairer } from "@/src/components/network/NetworkTabs";
 import {
@@ -51,32 +55,6 @@ export function HomePageContent({ page }: HomePageContentProps) {
     [],
   );
 
-  function resolveRegionName(
-    value: PublicNetworkAddress["regionId"],
-    fallbackAddress: string,
-  ): string {
-    if (typeof value === "string" && value.trim()) {
-      const v = value.trim();
-      // Ignore id-like strings; prefer readable names.
-      if (!/^[a-f0-9]{24}$/i.test(v)) return v;
-    }
-    if (value && typeof value === "object" && value.name?.trim()) return value.name.trim();
-    // fallback grouping (same behavior when region missing)
-    const stateMatch = fallbackAddress.match(/\b(NSW|VIC|QLD|SA|WA|TAS|ACT|NT)\b/i);
-    const code = stateMatch?.[1]?.toUpperCase();
-    const REGION_BY_CODE: Record<string, string> = {
-      NSW: "New South Wales",
-      VIC: "Victoria",
-      QLD: "Queensland",
-      SA: "South Australia",
-      WA: "Western Australia",
-      TAS: "Tasmania",
-      ACT: "Australian Capital Territory",
-      NT: "Northern Territory",
-    };
-    return (code && REGION_BY_CODE[code]) || "Other";
-  }
-
   useEffect(() => {
     fetchPublicNetworkAddressesClient().then((rows) => {
       const mapped = rows
@@ -86,8 +64,10 @@ export function HomePageContent({ page }: HomePageContentProps) {
             name: deriveLocationName(address),
             address,
             region: resolveRegionName(row.regionId, address),
+            regionSortOrder: resolveRegionSortOrder(row.regionId),
             status: row.statusText || "Approved",
             link: row.link || undefined,
+            email: row.email || undefined,
             latitude: row.latitude,
             longitude: row.longitude,
           };

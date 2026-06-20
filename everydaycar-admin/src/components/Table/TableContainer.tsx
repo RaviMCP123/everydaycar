@@ -10,14 +10,7 @@ import { ColumnType } from "antd/es/table";
 interface TableContainerProps<T> {
   columns: ColumnType<T>[];
   data: T[];
-  pagination: {
-    current: number;
-    pageSize: number;
-    total: number;
-    showSizeChanger: boolean;
-    pageSizeOptions: string[];
-    showTotal: (total: number, range: [number, number]) => string;
-  };
+  pagination?: TableProps<T>["pagination"];
   onChange: (
     pagination: import("antd").TablePaginationConfig,
     filters: Record<

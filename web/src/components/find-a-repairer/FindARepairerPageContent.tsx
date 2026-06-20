@@ -5,8 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { PageDetail } from "@/lib/api/types";
-import { fetchPageBySlugClient } from "@/lib/api/pages";
 import { getLocalizedText } from "@/lib/cms/content";
+import { useCmsPage } from "@/lib/cms/use-cms-page";
 import { parseFindRepairerStructuredContent } from "@/lib/cms/parse-find-repairer-content";
 import { PAGE_SLUGS } from "@/lib/cms/routes";
 import {
@@ -69,11 +69,13 @@ export function RepairerCard({
   distanceLabel,
   statusText,
   link,
+  email,
 }: {
   address: string;
   distanceLabel?: string;
   statusText?: string;
   link?: string;
+  email?: string;
 }) {
   const [street, ...rest] = address.split(",");
   const suburb = rest.join(",").trim();
@@ -87,8 +89,8 @@ export function RepairerCard({
         </span>
       </div>
 
-      <div className="mt-5 flex items-center justify-between gap-4">
-        <div className="flex min-w-0 gap-4">
+      <div className="mt-5 flex items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-1 gap-4">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full !bg-[rgba(30,115,190,1)] text-white">
             <Icon name="location" className="h-5 w-5" />
           </span>
@@ -103,6 +105,27 @@ export function RepairerCard({
                 {suburb}
               </p>
             ) : null}
+
+            {email?.trim() ? (
+              <a
+                href={`mailto:${email.trim()}`}
+                className="mt-2 inline-flex w-fit items-center gap-1.5 text-[13px] font-semibold leading-5 !text-[rgba(30,115,190,1)] transition hover:!text-[#1b6eb5]"
+              >
+                <Icon name="mail" className="h-3.5 w-3.5 shrink-0" />
+                {email.trim()}
+              </a>
+            ) : null}
+
+            <Link
+              href={mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Get directions to ${address}`}
+              className="mt-3 inline-flex w-fit items-center gap-2 text-[14px] font-semibold !text-[rgba(30,115,190,1)] transition hover:gap-3 hover:!text-[#1b6eb5]"
+            >
+              Get directions
+              <Icon name="arrowRight" className="h-4 w-4" />
+            </Link>
           </div>
         </div>
 
@@ -111,17 +134,6 @@ export function RepairerCard({
           {statusText || "Approved"}
         </span>
       </div>
-
-      <Link
-        href={mapsUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={`Get directions to ${address}`}
-        className="mt-5 inline-flex w-fit items-center gap-2 text-[14px] font-semibold !text-[rgba(30,115,190,1)] transition hover:gap-3 hover:!text-[#1b6eb5]"
-      >
-        Get directions
-        <Icon name="arrowRight" className="h-4 w-4" />
-      </Link>
     </article>
   );
 }
@@ -134,7 +146,7 @@ export function FindARepairerPageContent({
   page: initialPage = null,
 }: FindARepairerPageContentProps) {
   const pathname = usePathname();
-  const [page, setPage] = useState<PageDetail | null>(initialPage);
+  const page = useCmsPage(PAGE_SLUGS.findARepairer, initialPage);
   const [query, setQuery] = useState("");
   const [repairers, setRepairers] = useState<
     Array<{
@@ -142,6 +154,7 @@ export function FindARepairerPageContent({
       address: string;
       link?: string;
       statusText?: string;
+      email?: string;
       latitude?: number;
       longitude?: number;
     }>
@@ -154,20 +167,6 @@ export function FindARepairerPageContent({
   const [coordsByAddress, setCoordsByAddress] = useState<
     Record<string, Coordinates | null>
   >({});
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetchPageBySlugClient(PAGE_SLUGS.findARepairer).then((data) => {
-      if (!cancelled && data) {
-        setPage(data);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const structured =
     page?.content && typeof page.content === "object"
@@ -210,6 +209,7 @@ export function FindARepairerPageContent({
             key,
             address,
             link: row.link || "",
+            email: row.email || "",
             statusText: row.statusText || "Approved",
             latitude: row.latitude,
             longitude: row.longitude,
@@ -448,6 +448,7 @@ export function FindARepairerPageContent({
                   address={repairer.address}
                   statusText={repairer.statusText}
                   link={repairer.link}
+                  email={repairer.email}
                   distanceLabel={
                     distanceKm !== null && Number.isFinite(distanceKm)
                       ? `~${Math.abs(distanceKm).toFixed(1)} km away`

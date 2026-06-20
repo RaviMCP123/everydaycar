@@ -25,6 +25,11 @@ export class CreateNetworkAddressDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  email?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(120)
   statusText?: string;
 
@@ -57,6 +62,11 @@ export class UpdateNetworkAddressDto {
   @IsString()
   @MaxLength(1000)
   link?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  email?: string;
 
   @IsOptional()
   @IsString()

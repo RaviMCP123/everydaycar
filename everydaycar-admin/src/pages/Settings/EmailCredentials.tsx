@@ -104,15 +104,15 @@ const EmailCredentialsPage: React.FC = () => {
           <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">
             Email Credential Settings
           </h4>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Save SMTP credentials that will be used by OTP and admin test email APIs.
-          </p>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {/* <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Save SMTP credentials used for forgot-password OTP emails and test messages.
+          </p> */}
+          {/* <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
             Current source: <strong>{data?.data?.source || "env"}</strong>
             {data?.data?.smtp?.hasPassword
               ? " (password is configured)"
               : " (password is not configured)"}
-          </p>
+          </p> */}
         </div>
 
         <Form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -163,7 +163,7 @@ const EmailCredentialsPage: React.FC = () => {
                 className={`h-11 w-full rounded-lg border px-4 py-2.5 text-sm ${
                   errors.user ? "border-rose-300" : "border-gray-300"
                 }`}
-                placeholder="irweb@quadequities.com.au"
+                placeholder="info@everydaycarrepair.com.au"
                 {...register("user", {
                   required: "SMTP username is required.",
                   pattern: {
@@ -185,7 +185,7 @@ const EmailCredentialsPage: React.FC = () => {
                 className={`h-11 w-full rounded-lg border px-4 py-2.5 text-sm ${
                   errors.from ? "border-rose-300" : "border-gray-300"
                 }`}
-                placeholder="irweb@quadequities.com.au"
+                placeholder="info@everydaycarrepair.com.au"
                 {...register("from", {
                   required: "SMTP from is required.",
                   pattern: {
@@ -300,7 +300,7 @@ const EmailCredentialsPage: React.FC = () => {
             <Form.Control
               type="email"
               className="h-11 w-full lg:flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm"
-              placeholder="Recipient email (e.g. quadequity@gmail.com)"
+              placeholder="Recipient email (e.g. info@everydaycarrepair.com.au)"
               value={testTo}
               onChange={(e) => setTestTo(e.target.value)}
             />

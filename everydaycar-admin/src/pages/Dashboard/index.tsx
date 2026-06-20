@@ -63,21 +63,21 @@ const Dashboard: React.FC = () => {
       value: stats?.pendingReferrals ?? 0,
       hint: "New book repair requests",
       accent: "bg-amber-50 text-amber-800",
-      href: "/book-repair-requests",
+      href: "/book-repair-requests?status=new",
     },
     {
       title: "Active Jobs",
       value: stats?.activeJobs ?? 0,
       hint: "Book repairs in progress",
       accent: "bg-[#E3F2FD] text-[#1565C0]",
-      href: "/book-repair-requests",
+      href: "/book-repair-requests?status=in_progress",
     },
     {
       title: "Completed",
       value: stats?.completedJobs ?? 0,
       hint: "Closed book repair requests",
       accent: "bg-[#E8F5E9] text-[#2E7D32]",
-      href: "/book-repair-requests",
+      href: "/book-repair-requests?status=completed",
     },
   ];
 

@@ -5,6 +5,7 @@ export interface NetworkRegion {
   id?: string;
   name: string;
   status: boolean;
+  sortOrder?: number;
   createdAt?: string;
   updatedAt?: string;
 }

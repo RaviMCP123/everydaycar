@@ -93,7 +93,17 @@ export class BookRepairListQueryDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(200)
+  search?: string;
+
+  @IsOptional()
+  @IsString()
   createdAt?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(["new", "in_progress", "completed"])
+  status?: "new" | "in_progress" | "completed";
 
   @IsOptional()
   sort?: string = "createdAt";

@@ -82,7 +82,10 @@ export class PageService {
     }
 
     // Generate slug if not provided
-    // Priority: customSlug > slug > auto-generate from title
+    // Priority: category slug > customSlug > slug > auto-generate from title
+    if (request.category && !request.slug && !request.customSlug) {
+      request.slug = this.createSlug(String(request.category));
+    }
     if (!request.slug && !request.customSlug && titleString) {
       request.slug = this.createSlug(titleString);
     }
@@ -186,6 +189,16 @@ export class PageService {
       updateData.account_holder_id = new Types.ObjectId(
         request.account_holder_id,
       );
+    }
+
+    if (request.content && typeof request.content === "object") {
+      const existingPage = await this.pageModel.findById(id).lean();
+      if (existingPage?.content && typeof existingPage.content === "object") {
+        updateData.content = {
+          ...(existingPage.content as Record<string, unknown>),
+          ...(request.content as Record<string, unknown>),
+        };
+      }
     }
 
     return this.pageModel.findByIdAndUpdate(
@@ -307,8 +320,20 @@ export class PageService {
    * @returns Promise<any> - The matched page with full data, or null if not found
    */
   async findBySlug(slug: string): Promise<any> {
+    const normalized = String(slug ?? "").trim().toLowerCase();
+    if (!normalized || normalized === "undefined") {
+      return null;
+    }
+
     const result: any = await this.pageModel
-      .findOne({ slug, status: true })
+      .findOne({
+        status: true,
+        $or: [
+          { slug: normalized },
+          { customSlug: normalized },
+          { category: normalized },
+        ],
+      })
       .lean({ getters: true })
       .exec();
     if (result && result._id) {

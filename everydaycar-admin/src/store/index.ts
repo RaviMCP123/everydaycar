@@ -9,6 +9,8 @@ import "@services/pageApi";
 import "@services/cmsCategoryApi";
 import "@services/networkRegionApi";
 import "@services/networkAddressApi";
+import "@services/settingsApi";
+import "@services/dashboardApi";
 
 const persistConfig = {
   key: "everydaycar-admin-root",

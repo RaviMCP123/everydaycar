@@ -35,7 +35,7 @@ export function HeroSection({
             fill
             priority
             sizes="50vw"
-            className="object-cover object-[center_30%]"
+            className="object-cover object-center"
           />
           <div className="absolute inset-0 !bg-[linear-gradient(90deg,#0D1B2A_0%,rgba(13,27,42,0)_100%)]" />
         </div>
@@ -46,7 +46,7 @@ export function HeroSection({
 
       <div className="container relative z-10 grid min-h-[300px] md:grid-cols-2 md:min-h-[360px]">
         <div className="flex items-center">
-          <div className="flex w-full max-w-[620px] flex-col gap-3 py-12 pr-8">
+          <div className="flex w-full max-w-[520px] flex-col gap-3 py-12 pr-8">
             {copy.eyebrow ? (
               <div className="mb-[12px] flex items-center gap-3">
                 <span className="h-px w-[30px] bg-white/70" />
@@ -56,11 +56,13 @@ export function HeroSection({
               </div>
             ) : null}
             {copy.title ? (
-              <h1 className="max-w-[620px] text-[clamp(32px,4vw,44px)] font-bold leading-[1.06] tracking-normal">
+              <h1 className="max-w-[520px] text-[clamp(34px,4vw,48px)] font-bold leading-[1.12] tracking-normal">
                 {copy.title}
               </h1>
             ) : null}
-            <span className="mt-[12px] block h-px w-[34px] bg-white/70" />
+            {copy.title || copy.subtitle ? (
+              <span className="mt-[12px] block h-px w-[34px] bg-white/70" />
+            ) : null}
             {copy.subtitle ? (
               <p className="mt-[13px] max-w-[520px] text-[14px] font-medium leading-[24px] text-white/75">
                 {copy.subtitle}
@@ -76,7 +78,7 @@ export function HeroSection({
               fill
               priority
               sizes="100vw"
-              className="object-cover object-[center_30%]"
+              className="object-cover object-center"
             />
             <div className="absolute inset-0 !bg-[linear-gradient(90deg,#0D1B2A_0%,rgba(13,27,42,0)_100%)]" />
           </div>

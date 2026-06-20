@@ -75,15 +75,9 @@ const Header: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
 
           <Link to="/" className="lg:hidden">
             <img
-              className="dark:hidden"
-              style={{ filter: "brightness(0)" }}
-              src="/images/logo/logo.png"
-              alt="Logo"
-            />
-            <img
-              className="hidden dark:block"
-              src="/images/logo/logo.png"
-              alt="Logo"
+              className="h-8 w-auto"
+              src="/images/logo.png"
+              alt="everydaycar"
             />
           </Link>
 

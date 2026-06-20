@@ -6,11 +6,9 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { NavLink } from "@/lib/api/types";
 import { DEFAULT_HEADER_NAV } from "@/lib/cms/routes";
+import { buildTelHref, formatPhoneDisplay } from "@/lib/phone";
 import { Icon } from "@/src/components/ui/Icon";
 import { images } from "@/src/image";
-
-const HEADER_PHONE_DISPLAY = "1300 721 840";
-const HEADER_PHONE_HREF = "tel:1300721840";
 
 function normalizePathname(pathname: string) {
   if (pathname.length > 1 && pathname.endsWith("/")) {
@@ -37,9 +35,15 @@ function isNavigationItemActive(pathname: string, item: NavLink) {
 
 type HeaderProps = {
   navigation?: NavLink[];
+  phone?: string;
 };
 
-export function Header({ navigation = DEFAULT_HEADER_NAV }: HeaderProps) {
+export function Header({
+  navigation = DEFAULT_HEADER_NAV,
+  phone,
+}: HeaderProps) {
+  const phoneDisplay = phone ? formatPhoneDisplay(phone) : "";
+  const phoneHref = phone ? buildTelHref(phone) : "";
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -107,13 +111,15 @@ export function Header({ navigation = DEFAULT_HEADER_NAV }: HeaderProps) {
           })}
         </nav>
 
-        <a
-          href={HEADER_PHONE_HREF}
-          className="hidden shrink-0 items-center gap-2 text-[clamp(10px,1.08vw,15px)] font-bold !text-[var(--color-yellow)] transition hover:!text-[#ffd54d] lg:inline-flex"
-        >
-          <Icon name="phone" />
-          {HEADER_PHONE_DISPLAY}
-        </a>
+        {phoneHref ? (
+          <a
+            href={phoneHref}
+            className="hidden shrink-0 items-center gap-2 text-[clamp(15px,1.08vw,15px)] font-bold !text-[var(--color-yellow)] transition hover:!text-[#ffd54d] lg:inline-flex"
+          >
+            <Icon name="phone" />
+            {phoneDisplay}
+          </a>
+        ) : null}
 
         <button
           type="button"
@@ -189,14 +195,16 @@ export function Header({ navigation = DEFAULT_HEADER_NAV }: HeaderProps) {
               );
             })}
           </nav>
-          <a
-            href={HEADER_PHONE_HREF}
-            onClick={() => setIsOpen(false)}
-            className="mt-8 inline-flex items-center gap-2 text-[18px] font-bold !text-[var(--color-yellow)] transition hover:!text-[#ffd54d]"
-          >
-            <Icon name="phone" className="h-5 w-5" />
-            {HEADER_PHONE_DISPLAY}
-          </a>
+          {phoneHref ? (
+            <a
+              href={phoneHref}
+              onClick={() => setIsOpen(false)}
+              className="mt-8 inline-flex items-center gap-2 text-[18px] font-bold !text-[var(--color-yellow)] transition hover:!text-[#ffd54d]"
+            >
+              <Icon name="phone" className="h-5 w-5" />
+              {phoneDisplay}
+            </a>
+          ) : null}
         </aside>
       </div>
     </header>

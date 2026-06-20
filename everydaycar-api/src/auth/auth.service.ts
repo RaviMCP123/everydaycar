@@ -152,14 +152,16 @@ export class AuthService {
         from,
       } as SmtpSettings);
 
+    const appName = process.env.APP_NAME || "Everydaycar Admin";
+
     await transporter.sendMail({
-      from,
+      from: `"${appName}" <${from}>`,
       to: email,
-      subject: "Your Quad Equity CMS OTP",
+      subject: `Your ${appName} password reset code`,
       text: `Hello ${firstName || "there"}, your OTP is ${otp}. It expires in 5 minutes.`,
       html: `
         <div style="font-family: Arial, sans-serif; line-height: 1.5;">
-          <h2 style="margin-bottom: 12px;">Quad Equity CMS</h2>
+          <h2 style="margin-bottom: 12px;">${appName}</h2>
           <p>Hello ${firstName || "there"},</p>
           <p>Use the following OTP to reset your password:</p>
           <div style="font-size: 28px; font-weight: 700; letter-spacing: 6px; margin: 16px 0;">

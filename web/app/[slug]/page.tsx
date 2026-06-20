@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { getCategories } from "@/lib/api/cms";
 import { getPageBySlug } from "@/lib/api/pages";
 import { getLocalizedText, htmlToPlainText } from "@/lib/cms/content";
 import { CmsPageLoader } from "@/src/components/cms/CmsPageLoader";
 
 type SlugPageProps = {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 };
 
 const RESERVED_SLUGS = new Set([
@@ -21,10 +20,12 @@ const RESERVED_SLUGS = new Set([
   "find-a-repairer",
   "privacy-policy",
   "terms-and-conditions",
+  "faq",
+  "faqs",
 ]);
 
 /** Fallback slugs so static export never receives an empty param list. */
-const FALLBACK_CMS_SLUGS = ["privacy-policy", "terms-and-conditions"];
+const FALLBACK_CMS_SLUGS = ["privacy-policy", "terms-and-conditions", "faqs"];
 
 function toSlugParams(slugs: string[]): Array<{ slug: string }> {
   const unique = Array.from(
@@ -55,7 +56,8 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
 export async function generateMetadata({
   params,
 }: SlugPageProps): Promise<Metadata> {
-  const page = await getPageBySlug(params.slug).catch(() => null);
+  const { slug } = await params;
+  const page = await getPageBySlug(slug).catch(() => null);
   if (!page) {
     return {
       title: "everydaycar Repair Network",
@@ -74,16 +76,6 @@ export async function generateMetadata({
 }
 
 export default async function SlugPage({ params }: SlugPageProps) {
-  const page = await getPageBySlug(params.slug).catch(() => null);
-  if (!page) {
-    notFound();
-  }
-
-  return (
-    <CmsPageLoader
-      slug={params.slug}
-      eyebrow={getLocalizedText(page.title)}
-      initialPage={page}
-    />
-  );
+  const { slug } = await params;
+  return <CmsPageLoader slug={slug} eyebrow={slug} />;
 }

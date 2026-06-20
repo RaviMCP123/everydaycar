@@ -4,6 +4,7 @@ export interface NetworkAddress extends Document {
   regionId: Types.ObjectId;
   address: { [langCode: string]: string };
   link?: string;
+  email?: string;
   statusText?: string;
   latitude?: number;
   longitude?: number;
@@ -21,6 +22,7 @@ const NetworkAddressSchema = new Schema<NetworkAddress>(
     },
     address: { type: Map, of: String, required: true },
     link: { type: String, default: "" },
+    email: { type: String, default: "" },
     statusText: { type: String, default: "Approved" },
     latitude: { type: Number, required: false },
     longitude: { type: Number, required: false },

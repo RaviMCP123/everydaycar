@@ -25,7 +25,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function BookARepairPage() {
-  const page = await getPageBySlug(PAGE_SLUGS.bookARepair).catch(() => null);
-  return <RepairBookingPageContent page={page} />;
+export default function BookARepairPage() {
+  return <RepairBookingPageContent />;
 }

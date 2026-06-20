@@ -21,6 +21,16 @@ export const images = {
   aboutCheck: imagePath("/images/about-check.png"),
   aboutSupport: imagePath("/images/about-support.png"),
 
+  victoria: imagePath("/images/victoria.svg"),
+  companyFacts: imagePath("/images/companyFacts.png"),
+  legal: imagePath("/images/legal.svg"),
+  abn: imagePath("/images/abn.svg"),
+  founded: imagePath("/images/founded.svg"),
+  headOffice: imagePath("/images/head-office.svg"),
+  phone: imagePath("/images/phone.svg"),
+  email: imagePath("/images/email.svg"),
+  trading: imagePath("/images/trading.svg"),
+
   networkHero: imagePath("/images/network/network-hero.png"),
   networkHeroJpg: imagePath("/images/network-hero.jpg"),
 

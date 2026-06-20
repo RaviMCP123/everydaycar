@@ -24,9 +24,7 @@ export function FeatureItem({
       </span>
       <div>
         {title?.trim() ? (
-          <p className="mb-2 text-[16px] font-semibold leading-[1.3] !text-[#071d33]">
-            {title}
-          </p>
+          <h4 className="font-semibold">{title}</h4>
         ) : null}
         <p className="mt-1 max-w-[650px] text-[14px] font-normal leading-[1.55] !text-[#2f3742]">
           {text}

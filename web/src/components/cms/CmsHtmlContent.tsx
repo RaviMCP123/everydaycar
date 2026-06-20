@@ -1,4 +1,4 @@
-import { normalizeCmsHtml } from "@/lib/cms/content";
+import { LinkifiedHtml } from "@/src/components/cms/LinkifiedHtml";
 
 type CmsHtmlContentProps = {
   html: string;
@@ -23,10 +23,7 @@ export function CmsHtmlContent({
       {customCss?.trim() ? (
         <style dangerouslySetInnerHTML={{ __html: customCss }} />
       ) : null}
-      <div
-        className={wrapperClass}
-        dangerouslySetInnerHTML={{ __html: normalizeCmsHtml(html) }}
-      />
+      <LinkifiedHtml html={html} className={wrapperClass} />
     </>
   );
 }

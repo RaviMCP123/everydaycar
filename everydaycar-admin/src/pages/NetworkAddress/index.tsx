@@ -29,6 +29,7 @@ const NetworkAddressPage: React.FC = () => {
   const [regionId, setRegionId] = useState("");
   const [addressEn, setAddressEn] = useState("");
   const [link, setLink] = useState("");
+  const [email, setEmail] = useState("");
   const [statusText, setStatusText] = useState("Approved");
   const [latitude, setLatitude] = useState<string>("");
   const [longitude, setLongitude] = useState<string>("");
@@ -69,6 +70,7 @@ const NetworkAddressPage: React.FC = () => {
     setRegionId("");
     setAddressEn("");
     setLink("");
+    setEmail("");
     setStatusText("Approved");
     setLatitude("");
     setLongitude("");
@@ -81,6 +83,7 @@ const NetworkAddressPage: React.FC = () => {
     setRegionId(region.id);
     setAddressEn(row.address?.en || "");
     setLink(row.link || "");
+    setEmail(row.email || "");
     setStatusText(row.statusText || "Approved");
     setLatitude(row.latitude !== undefined ? String(row.latitude) : "");
     setLongitude(row.longitude !== undefined ? String(row.longitude) : "");
@@ -96,10 +99,16 @@ const NetworkAddressPage: React.FC = () => {
       showToast("Address is required.", "error");
       return;
     }
+    const trimmedEmail = email.trim();
+    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      showToast("Enter a valid email address.", "error");
+      return;
+    }
     const payload = {
       regionId,
       address: { en: addressEn.trim() },
       link: link.trim(),
+      email: trimmedEmail,
       statusText: statusText.trim() || "Approved",
       ...(latitude.trim() ? { latitude: Number(latitude) } : {}),
       ...(longitude.trim() ? { longitude: Number(longitude) } : {}),
@@ -124,6 +133,7 @@ const NetworkAddressPage: React.FC = () => {
       render: (_, row) => row.address?.en || "-",
     },
     { title: "Link", dataIndex: "link", key: "link", ellipsis: true },
+    { title: "Email", dataIndex: "email", key: "email", ellipsis: true },
     { title: "Status Text", dataIndex: "statusText", key: "statusText", ellipsis: true },
     {
       title: "Coordinates",
@@ -242,6 +252,14 @@ const NetworkAddressPage: React.FC = () => {
               value={link}
               onChange={(e) => setLink(e.target.value)}
               placeholder="https://maps.google.com/..."
+            />
+          </Form.Item>
+          <Form.Item label="Email (optional)">
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="info@repairer.com.au"
             />
           </Form.Item>
           <Form.Item label="Status Text">

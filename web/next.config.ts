@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
   basePath,
   assetPrefix: basePath ? `${basePath}/` : "",
+
   images: {
     unoptimized: true,
   },

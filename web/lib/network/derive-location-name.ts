@@ -1,3 +1,20 @@
+/** Remove a leading suburb/location name when it is repeated in the address body. */
+export function formatDisplayAddress(
+  address: string,
+  locationName?: string,
+): string {
+  const trimmed = address.trim();
+  const name = locationName?.trim();
+  if (!trimmed || !name) return trimmed;
+
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const withoutPrefix = trimmed
+    .replace(new RegExp(`^${escaped}(\\s*[,\\n]\\s*|\\s+)`, "i"), "")
+    .trim();
+
+  return withoutPrefix || trimmed;
+}
+
 /** Derive suburb/location title from a full street address string. */
 export function deriveLocationName(address: string): string {
   const trimmed = address.trim();

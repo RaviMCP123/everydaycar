@@ -29,7 +29,7 @@ export function WhoWeAreSection({
     : images.whoWeAre;
 
   return (
-    <section className="bg-white py-16 md:py-24">
+    <section className="bg-white py-6 md:py-14">
       <div className="container grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="flex flex-col gap-5">
           {title?.trim() ? (
@@ -56,7 +56,7 @@ export function WhoWeAreSection({
             width={760}
             height={620}
             sizes="(max-width: 1024px) 90vw, 520px"
-            className="aspect-[0.93/1] h-auto w-full object-cover"
+            className="aspect-[1.25/1] h-auto w-full object-cover"
           />
         </div>
       </div>

@@ -8,6 +8,7 @@ import ContactRequest from "@pages/ContactRequest";
 import NetworkRegion from "@pages/NetworkRegion";
 import NetworkAddress from "@pages/NetworkAddress";
 import UserProfiles from "@pages/UserProfile";
+import EmailCredentials from "@pages/Settings/EmailCredentials";
 
 interface RouteConfig {
   path: string;
@@ -60,6 +61,11 @@ const mainRoute: RouteConfig[] = [
     title: "Network Addresses",
   },
   { path: "/profile", component: UserProfiles, title: "Profile" },
+  {
+    path: "/settings/email-credentials",
+    component: EmailCredentials,
+    title: "SMTP Credentials",
+  },
 ];
 
 export default mainRoute;

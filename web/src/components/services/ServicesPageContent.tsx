@@ -1,17 +1,24 @@
+"use client";
+
 import type { PageDetail } from "@/lib/api/types";
-import { HeroSection } from "@/src/components/services/HeroSection";
-import { ServicesListSection } from "@/src/components/services/ServicesListSection";
-import { ServicesCTA } from "@/src/components/services/ServicesCTA";
-import { parseServicesStructuredContent } from "@/lib/cms/parse-services-content";
+import { useCmsPage } from "@/lib/cms/use-cms-page";
 import { getLocalizedText } from "@/lib/cms/content";
-import { CmsPageLoader } from "@/src/components/cms/CmsPageLoader";
+import { parseServicesStructuredContent } from "@/lib/cms/parse-services-content";
 import { PAGE_SLUGS } from "@/lib/cms/routes";
+import { CmsPageLoader } from "@/src/components/cms/CmsPageLoader";
+import { HeroSection } from "@/src/components/services/HeroSection";
+import { ServicesCTA } from "@/src/components/services/ServicesCTA";
+import { ServicesListSection } from "@/src/components/services/ServicesListSection";
 
 type ServicesPageContentProps = {
   page?: PageDetail | null;
 };
 
-export function ServicesPageContent({ page }: ServicesPageContentProps) {
+export function ServicesPageContent({
+  page: initialPage = null,
+}: ServicesPageContentProps) {
+  const page = useCmsPage(PAGE_SLUGS.services, initialPage);
+
   const structured =
     page?.content && typeof page.content === "object"
       ? parseServicesStructuredContent(page.content as Record<string, unknown>)
@@ -47,17 +54,7 @@ export function ServicesPageContent({ page }: ServicesPageContentProps) {
   }
 
   const descriptionHtml = page ? getLocalizedText(page.description) : "";
-  if (descriptionHtml.trim()) {
-    return (
-      <CmsPageLoader
-        slug={PAGE_SLUGS.services}
-        eyebrow="Services"
-        initialPage={page}
-      />
-    );
-  }
-
-  if (page) {
+  if (descriptionHtml.trim() || page) {
     return (
       <CmsPageLoader
         slug={PAGE_SLUGS.services}

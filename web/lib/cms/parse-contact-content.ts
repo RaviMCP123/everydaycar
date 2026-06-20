@@ -12,6 +12,7 @@ export type ContactStructuredContent = {
   formTitle?: string;
   formSubmitText?: string;
   mapOfficeLabel?: string;
+  mapAddress?: string;
 };
 
 function localizedToString(value: unknown): string {
@@ -51,13 +52,16 @@ export function parseContactStructuredContent(
       localizedToString(raw.contactFormSubmitText).trim() || undefined,
     mapOfficeLabel:
       localizedToString(raw.contactMapOfficeLabel).trim() || undefined,
+    mapAddress:
+      localizedToString(raw.contactMapAddress).trim() || undefined,
   };
 
   const hasData =
     Boolean(content.heroTitle) ||
     Boolean(content.infoPhone) ||
     Boolean(content.infoEmail) ||
-    Boolean(content.formTitle);
+    Boolean(content.formTitle) ||
+    Boolean(content.mapAddress);
 
   return hasData ? content : null;
 }

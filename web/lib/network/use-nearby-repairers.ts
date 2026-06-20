@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   type Coordinates,
-  geocodeAddress,
+  geocodeAddressesBatch,
   haversineDistanceKm,
   requestUserLocation,
 } from "@/lib/network/geolocation";
@@ -12,6 +12,7 @@ export type NearbyRepairerInput = {
   name: string;
   address: string;
   region: string;
+  regionSortOrder?: number;
   status?: string;
   link?: string;
   latitude?: number;
@@ -65,23 +66,30 @@ export function useNearbyRepairers(repairers: NearbyRepairerInput[]) {
 
     const resolveCoordinates = async () => {
       const updates: Record<string, Coordinates | null> = {};
-      await Promise.all(
-        missingAddresses.map(async (address) => {
-          const fromData = repairers.find((repairer) => repairer.address === address);
-          if (
-            fromData &&
-            typeof fromData.latitude === "number" &&
-            typeof fromData.longitude === "number"
-          ) {
-            updates[address] = {
-              latitude: fromData.latitude,
-              longitude: fromData.longitude,
-            };
-            return;
-          }
-          updates[address] = await geocodeAddress(address);
-        }),
-      );
+      const toGeocode: string[] = [];
+
+      for (const address of missingAddresses) {
+        const fromData = repairers.find((repairer) => repairer.address === address);
+        if (
+          fromData &&
+          typeof fromData.latitude === "number" &&
+          typeof fromData.longitude === "number"
+        ) {
+          updates[address] = {
+            latitude: fromData.latitude,
+            longitude: fromData.longitude,
+          };
+        } else {
+          toGeocode.push(address);
+        }
+      }
+
+      if (toGeocode.length > 0) {
+        const batch = await geocodeAddressesBatch(toGeocode);
+        for (const address of toGeocode) {
+          updates[address] = batch[address] ?? null;
+        }
+      }
 
       if (cancelled) return;
       setCoordsByAddress((prev) => ({ ...prev, ...updates }));

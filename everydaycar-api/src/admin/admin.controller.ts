@@ -258,12 +258,13 @@ export class AdminController {
     }
     const transporter =
       await this.settingsService.createVerifiedSmtpTransporter(smtp);
+    const appName = process.env.APP_NAME || "Everydaycar Admin";
     const info = await transporter.sendMail({
-      from: `"Quad Equity CMS" <${smtp.from}>`,
+      from: `"${appName}" <${smtp.from}>`,
       to: body.to,
-      subject: `Quad SMTP settings test ${Date.now()}`,
-      text: "This is a test email from the admin SMTP settings API.",
-      headers: { "X-Quad-Test": "admin-smtp-settings" },
+      subject: `${appName} SMTP test ${Date.now()}`,
+      text: "This is a test email from the admin SMTP settings.",
+      headers: { "X-Everydaycar-Test": "admin-smtp-settings" },
     });
 
     return res.status(HttpStatus.OK).json({

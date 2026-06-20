@@ -22,6 +22,16 @@ export class NetworkRegionService {
     private readonly networkAddressModel: Model<any>,
   ) {}
 
+  private async nextSortOrder() {
+    const latest = await this.networkRegionModel
+      .findOne()
+      .sort({ sortOrder: -1 })
+      .select("sortOrder")
+      .lean()
+      .exec();
+    return (latest?.sortOrder ?? 0) + 1;
+  }
+
   async create(dto: CreateNetworkRegionDto) {
     const exists = await this.networkRegionModel.findOne({
       name: { $regex: `^${dto.name.trim()}$`, $options: "i" },
@@ -32,6 +42,7 @@ export class NetworkRegionService {
     const doc = new this.networkRegionModel({
       name: dto.name.trim(),
       status: dto.status ?? true,
+      sortOrder: await this.nextSortOrder(),
     });
     return doc.save();
   }
@@ -64,7 +75,54 @@ export class NetworkRegionService {
   async findList(status?: boolean) {
     const filter: Record<string, unknown> = {};
     if (typeof status === "boolean") filter.status = status;
-    return this.networkRegionModel.find(filter).sort({ name: 1 }).lean().exec();
+    return this.networkRegionModel
+      .find(filter)
+      .sort({ sortOrder: 1, name: 1 })
+      .lean()
+      .exec();
+  }
+
+  async findPublicList(limit = 5) {
+    const safeLimit = Math.min(5, Math.max(1, limit));
+    return this.networkRegionModel
+      .find({ status: true })
+      .sort({ sortOrder: 1, name: 1 })
+      .limit(safeLimit)
+      .select("name sortOrder")
+      .lean()
+      .exec();
+  }
+
+  async reorder(ids: string[]) {
+    const uniqueIds = [...new Set(ids.map((id) => id.trim()).filter(Boolean))];
+    if (uniqueIds.length === 0) {
+      throw new BadRequestException("At least one region ID is required.");
+    }
+    if (uniqueIds.some((id) => !Types.ObjectId.isValid(id))) {
+      throw new BadRequestException("Invalid region ID.");
+    }
+
+    const existingCount = await this.networkRegionModel.countDocuments({
+      _id: { $in: uniqueIds.map((id) => new Types.ObjectId(id)) },
+    });
+    if (existingCount !== uniqueIds.length) {
+      throw new BadRequestException("One or more regions were not found.");
+    }
+
+    await this.networkRegionModel.bulkWrite(
+      uniqueIds.map((id, index) => ({
+        updateOne: {
+          filter: { _id: new Types.ObjectId(id) },
+          update: { $set: { sortOrder: index + 1 } },
+        },
+      })),
+    );
+
+    return this.networkRegionModel
+      .find({ _id: { $in: uniqueIds.map((id) => new Types.ObjectId(id)) } })
+      .sort({ sortOrder: 1, name: 1 })
+      .lean()
+      .exec();
   }
 
   async update(id: string, dto: UpdateNetworkRegionDto) {

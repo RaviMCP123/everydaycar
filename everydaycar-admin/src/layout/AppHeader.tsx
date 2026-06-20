@@ -89,7 +89,7 @@ const AppHeader: React.FC = () => {
           <Link to="/" className="lg:hidden inline-flex items-center h-10">
             <img
               className="h-8 sm:h-9"
-              src={`${import.meta.env.BASE_URL}images/logo/everydaycar-logo.svg`}
+              src={`${import.meta.env.BASE_URL}images/logo.png`}
               alt="everydaycar"
             />
           </Link>
@@ -114,9 +114,9 @@ const AppHeader: React.FC = () => {
           </button>
         </div>
         <Activity mode={isApplicationMenuOpen || isDesktop ? "visible" : "hidden"}>
-          <div className="flex items-center justify-between w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none">
-          <UserDropdown />
-        </div>
+          <div className="relative flex w-full items-center justify-start gap-4 px-3 py-4 shadow-theme-md sm:px-5 lg:justify-end lg:px-0 lg:py-4 lg:shadow-none">
+            <UserDropdown />
+          </div>
         </Activity>
       </div>
     </header>

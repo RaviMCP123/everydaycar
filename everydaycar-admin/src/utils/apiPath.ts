@@ -13,9 +13,13 @@ export const GET_BOOK_REPAIR = "book-repair";
 export const GET_CONTACT_REQUEST = "contact";
 export const GET_NETWORK_REGION = "network-region";
 export const GET_NETWORK_REGION_LIST = "network-region/list";
+export const REORDER_NETWORK_REGION = "network-region/reorder";
 export const GET_NETWORK_ADDRESS = "network-address";
 export const GET_NETWORK_ADDRESS_LIST = "network-address/list";
 export const GET_CMS_CATEGORY = "cms/category";
 export const GET_CMS_CATEGORY_LIST = "cms/category/list";
 export const GET_CMS_CATEGORY_PLACEMENT_SORT_ORDERS =
   "cms/category/placement/sort-orders";
+export const GET_EMAIL_CREDENTIALS = "admin/email-credentials";
+export const UPDATE_EMAIL_CREDENTIALS = "admin/email-credentials";
+export const TEST_EMAIL_CREDENTIALS = "admin/email-credentials/test";

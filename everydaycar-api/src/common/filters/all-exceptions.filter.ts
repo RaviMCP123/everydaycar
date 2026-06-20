@@ -6,6 +6,24 @@ import {
   HttpStatus,
 } from "@nestjs/common";
 
+function extractHttpExceptionMessage(exception: HttpException): string {
+  const res = exception.getResponse();
+  if (typeof res === "string" && res.trim()) {
+    return res;
+  }
+  if (res && typeof res === "object") {
+    const message = (res as { message?: string | string[] }).message;
+    if (Array.isArray(message)) {
+      return message.find((entry) => typeof entry === "string" && entry.trim()) ??
+        "Bad request";
+    }
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+  return "Bad request";
+}
+
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: Error, host: ArgumentsHost) {
@@ -23,19 +41,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
           ? HttpStatus.UNPROCESSABLE_ENTITY
           : exception.getStatus();
 
-      const res = exception.getResponse() as
-        | { message?: string | string[] }
-        | string;
-      message = String(
-        exception.getStatus() === 400
-          ? Array.isArray((res as { message?: string[] })?.["message"])
-            ? ((res as { message?: string[] })?.["message"]?.[0] ??
-              "Bad request")
-            : "Bad request"
-          : typeof res === "object" && res !== null
-            ? ((res as { message?: string })?.["message"] ?? "")
-            : (res ?? ""),
-      );
+      message = extractHttpExceptionMessage(exception);
     } else if (typeof exception === "object" && exception?.message) {
       message = exception.message;
     }

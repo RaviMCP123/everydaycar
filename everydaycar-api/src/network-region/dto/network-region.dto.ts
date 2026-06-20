@@ -1,6 +1,9 @@
 import { Type } from "class-transformer";
 import {
+  ArrayNotEmpty,
+  IsArray,
   IsBoolean,
+  IsMongoId,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -44,10 +47,10 @@ export class NetworkRegionListQueryDto {
 
   @IsOptional()
   @IsString()
-  sort?: string = "createdAt";
+  sort?: string = "sortOrder";
 
   @IsOptional()
-  direction?: "asc" | "desc" = "desc";
+  direction?: "asc" | "desc" = "asc";
 
   @IsOptional()
   @IsNumber()
@@ -60,4 +63,11 @@ export class NetworkRegionListQueryDto {
   @Type(() => Number)
   @Min(1)
   limit?: number = 10;
+}
+
+export class ReorderNetworkRegionsDto {
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsMongoId({ each: true })
+  ids: string[];
 }

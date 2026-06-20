@@ -1,0 +1,32 @@
+# Apache rules for Next.js static export (output: "export", trailingSlash: true)
+#
+# IMPORTANT: Do NOT rewrite all URLs to index.html — that always shows the home page.
+# Unknown CMS slugs are served via 404.html, which loads page content from the API.
+
+Options -MultiViews
+RewriteEngine On
+
+# If the site is deployed in a subdirectory, set RewriteBase (e.g. /everydaycar/)
+RewriteBase /
+
+DirectoryIndex index.html
+
+# Serve real files (CSS, JS, images, etc.)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Serve real directories that contain index.html
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Normalize URLs to trailing slash (matches next.config trailingSlash: true)
+RewriteCond %{REQUEST_URI} !/$
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.+)$ /$1/ [R=301,L]
+
+# Static export pages: /about/ -> /about/index.html
+RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}index.html -f
+RewriteRule ^(.+?)/?$ $1/index.html [L]
+
+# New CMS pages added after build (no pre-generated HTML): load via API in 404 shell
+RewriteRule ^ 404.html [L]

@@ -78,13 +78,18 @@
   }
 
   a.font-semibold,
-  a strong {
-    color: var(--color-bright-blue);
+  a strong,
+  a.cms-contact-link,
+  a[href^="mailto:"],
+  a[href^="tel:"] {
+    color: var(--color-bright-blue) !important;
     font-weight: 600;
-    text-decoration: none;
+    text-decoration: underline !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
 
     &:hover {
-      text-decoration: underline;
+      text-decoration: underline !important;
     }
   }
 

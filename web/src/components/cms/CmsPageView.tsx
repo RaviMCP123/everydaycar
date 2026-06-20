@@ -1,7 +1,7 @@
 import type { PageDetail } from "@/lib/api/types";
 import { PAGE_SLUGS } from "@/lib/cms/routes";
 import { getLocalizedText } from "@/lib/cms/content";
-import { parseHomeStructuredContent } from "@/lib/cms/parse-home-content";
+import { parseHomeStructuredContent, isHomePageTemplate } from "@/lib/cms/parse-home-content";
 import { resolveMediaUrl } from "@/lib/images";
 import { HomePageContent } from "@/src/components/home/HomePageContent";
 import { CmsHtmlContent } from "./CmsHtmlContent";
@@ -14,7 +14,10 @@ type CmsPageViewProps = {
   compactHero?: boolean;
 };
 
-function isHomePage(page: PageDetail, slug?: string): boolean {
+function shouldUseHomeLayout(page: PageDetail, slug?: string): boolean {
+  if (isHomePageTemplate(page.templateKey)) {
+    return true;
+  }
   const key = (slug ?? page.slug ?? page.customSlug ?? "").toLowerCase();
   const category = (page.category ?? "").toLowerCase();
   return key === PAGE_SLUGS.home || category === PAGE_SLUGS.home;
@@ -43,7 +46,7 @@ export function CmsPageView({
     ? resolveMediaUrl(page.bannerImage)
     : undefined;
 
-  if (isHomePage(page, slug)) {
+  if (shouldUseHomeLayout(page, slug)) {
     const structured = parseHomeStructuredContent(
       (page.content as Record<string, unknown>) || undefined,
     );

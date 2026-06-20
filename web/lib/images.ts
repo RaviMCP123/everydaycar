@@ -11,10 +11,10 @@ export function resolveMediaUrl(url: string | undefined | null): string {
   if (!trimmed) return "";
 
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    if (
-      trimmed.includes("localhost:2022") ||
-      trimmed.includes("127.0.0.1:2022")
-    ) {
+    const isLocalDevHost =
+      /localhost:\d+/i.test(trimmed) || /127\.0\.0\.1:\d+/i.test(trimmed);
+
+    if (isLocalDevHost) {
       const base = getApiBaseUrl();
       const path = trimmed.replace(/^https?:\/\/[^/]+/, "");
       return `${base}${path}`;

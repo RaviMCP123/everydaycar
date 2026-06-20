@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { Icon } from "@/src/components/ui/Icon";
 import { resolveMediaUrl } from "@/lib/images";
 
@@ -55,12 +54,6 @@ export function ServiceCard({ service }: { service: Service }) {
             </li>
           ))}
         </ul>
-        <Link
-          href="#"
-          className="mt-4 inline-flex w-fit items-center gap-2 text-[11px] font-bold !text-[#1E73BE] transition hover:gap-3"
-        >
-          Learn More <Icon name="arrowRight" className="h-[13px] w-[13px]" />
-        </Link>
       </div>
     </article>
   );

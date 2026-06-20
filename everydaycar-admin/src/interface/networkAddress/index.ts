@@ -13,6 +13,7 @@ export interface NetworkAddress {
       };
   address: Record<string, string>;
   link?: string;
+  email?: string;
   statusText?: string;
   latitude?: number;
   longitude?: number;

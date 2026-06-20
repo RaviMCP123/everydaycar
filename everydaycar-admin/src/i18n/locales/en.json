@@ -20,6 +20,7 @@
     "bookRepairRequests": "Book Repair Requests",
     "networkRegions": "Network Regions",
     "networkAddresses": "Network Addresses",
+    "smtpCredentials": "SMTP Settings",
     "enquiries": "Enquiries",
     "emailTemplates": "Email Templates",
     "smsTemplates": "SMS Templates",

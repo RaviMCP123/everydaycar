@@ -25,11 +25,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function OurNetworkPage() {
-  const page = await getPageBySlug(PAGE_SLUGS.ourNetwork).catch(() => null);
-  if (!page) {
-    return null;
-  }
-
-  return <NetworkPageContent page={page} />;
+export default function OurNetworkPage() {
+  return <NetworkPageContent />;
 }

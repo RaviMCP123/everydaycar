@@ -26,7 +26,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function AboutPage() {
-  const page = await getPageBySlug(PAGE_SLUGS.about).catch(() => null);
-  return <AboutPageContent page={page} />;
+export default function AboutPage() {
+  return <AboutPageContent />;
 }

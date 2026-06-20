@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import type { PageDetail } from "@/lib/api/types";
-import { fetchPageBySlugClient } from "@/lib/api/pages";
+import { useCmsPage } from "@/lib/cms/use-cms-page";
 import { parseContactStructuredContent } from "@/lib/cms/parse-contact-content";
 import { ContactForm } from "@/src/components/contact/ContactForm";
 import { ContactInfoCard } from "@/src/components/contact/ContactInfoCard";
+import { ContactMap } from "@/src/components/contact/ContactMap";
 import { CmsPageView } from "@/src/components/cms/CmsPageView";
 import { resolveMediaUrl } from "@/lib/images";
 import { PAGE_SLUGS } from "@/lib/cms/routes";
@@ -15,26 +15,12 @@ type ContactPageContentProps = {
 };
 
 export function ContactPageContent({ page: initialPage = null }: ContactPageContentProps) {
-  const [page, setPage] = useState<PageDetail | null>(initialPage);
+  const page = useCmsPage(PAGE_SLUGS.contact, initialPage);
 
   const structured =
     page?.content && typeof page.content === "object"
       ? parseContactStructuredContent(page.content as Record<string, unknown>)
       : null;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetchPageBySlugClient(PAGE_SLUGS.contact).then((data) => {
-      if (!cancelled && data) {
-        setPage(data);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   if (!page) {
     return null;
@@ -56,7 +42,7 @@ export function ContactPageContent({ page: initialPage = null }: ContactPageCont
         eyebrow={structured?.heroEyebrow || "Contact Us"}
         compactHero
       />
-      <section className="min-h-[620px] !bg-[#f6f8fb] py-11">
+      <section className="flex min-h-[620px] flex-col gap-8 !bg-[#f6f8fb] py-11 lg:gap-10">
         <div className="container grid grid-cols-1 items-start gap-6 lg:grid-cols-[0.86fr_1.22fr] lg:gap-7">
           <ContactInfoCard page={page} structured={structured} />
           <ContactForm
@@ -64,6 +50,13 @@ export function ContactPageContent({ page: initialPage = null }: ContactPageCont
             submitText={structured?.formSubmitText}
           />
         </div>
+        <ContactMap
+          address={
+            structured?.mapAddress?.trim() ||
+            structured?.infoAddress?.trim() ||
+            undefined
+          }
+        />
       </section>
     </>
   );

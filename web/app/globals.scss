@@ -313,6 +313,13 @@ a {
     text-decoration: underline;
   }
 
+  :where(a.cms-contact-link, a[href^="mailto:"], a[href^="tel:"]) {
+    color: var(--color-bright-blue) !important;
+    text-decoration: underline !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+  }
+
   :where(img) {
     max-width: 100%;
     height: auto;

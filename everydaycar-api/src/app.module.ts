@@ -20,6 +20,7 @@ import { ContactModule } from "./contact/contact.module";
 import { BookRepairModule } from "./book-repair/book-repair.module";
 import { NetworkRegionModule } from "./network-region/network-region.module";
 import { NetworkAddressModule } from "./network-address/network-address.module";
+import { GeocodeModule } from "./geocode/geocode.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
 
 /**
@@ -61,6 +62,7 @@ const envFile =
     BookRepairModule,
     NetworkRegionModule,
     NetworkAddressModule,
+    GeocodeModule,
     DashboardModule,
     SettingsModule,
   ],

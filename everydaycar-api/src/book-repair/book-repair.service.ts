@@ -6,6 +6,7 @@ import {
   CreateBookRepairDto,
 } from "./dto/book-repair.dto";
 import { BookRepairSubmission } from "./book-repair.schema";
+import { Helper } from "../helpers";
 
 @Injectable()
 export class BookRepairService {
@@ -32,17 +33,29 @@ export class BookRepairService {
     const sort: Record<string, 1 | -1> = { [sortField]: direction };
 
     const filter: Record<string, unknown> = {};
-    if (query.name?.trim()) {
-      filter.fullName = {
-        $regex: query.name.trim(),
-        $options: "i",
-      };
-    }
-    if (query.mobileNumber?.trim()) {
-      filter.mobileNumber = {
-        $regex: query.mobileNumber.trim(),
-        $options: "i",
-      };
+    if (query.search?.trim()) {
+      const term = Helper.escapeRegex(query.search.trim());
+      filter.$or = [
+        { fullName: { $regex: term, $options: "i" } },
+        { mobileNumber: { $regex: term, $options: "i" } },
+        { vehicleMake: { $regex: term, $options: "i" } },
+        { vehicleModel: { $regex: term, $options: "i" } },
+        { vehicleYear: { $regex: term, $options: "i" } },
+        { registrationNumber: { $regex: term, $options: "i" } },
+      ];
+    } else {
+      if (query.name?.trim()) {
+        filter.fullName = {
+          $regex: Helper.escapeRegex(query.name.trim()),
+          $options: "i",
+        };
+      }
+      if (query.mobileNumber?.trim()) {
+        filter.mobileNumber = {
+          $regex: Helper.escapeRegex(query.mobileNumber.trim()),
+          $options: "i",
+        };
+      }
     }
     if (query.createdAt?.trim()) {
       const [start, end] = query.createdAt.split("TO");
@@ -56,6 +69,9 @@ export class BookRepairService {
           filter.createdAt = { $gte: startDate, $lte: endDate };
         }
       }
+    }
+    if (query.status) {
+      filter.status = query.status;
     }
 
     const [results, total] = await Promise.all([

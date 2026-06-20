@@ -18,6 +18,7 @@ import { AccountActiveGuard } from "../auth/jwt.guard";
 import {
   CreateNetworkRegionDto,
   NetworkRegionListQueryDto,
+  ReorderNetworkRegionsDto,
   UpdateNetworkRegionDto,
   UpdateNetworkRegionStatusDto,
 } from "./dto/network-region.dto";
@@ -68,6 +69,27 @@ export class NetworkRegionController {
     return res.status(HttpStatus.OK).json({
       statusCode: HttpStatus.OK,
       message: "Regions received successfully.",
+      data,
+    });
+  }
+
+  @Get("public")
+  async listPublic(@Res() res: Response) {
+    const data = await this.service.findPublicList(5);
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: "Public regions received successfully.",
+      data,
+    });
+  }
+
+  @Patch("reorder")
+  @UseGuards(AuthGuard("jwt"), AccountActiveGuard)
+  async reorder(@Body() body: ReorderNetworkRegionsDto, @Res() res: Response) {
+    const data = await this.service.reorder(body.ids);
+    return res.status(HttpStatus.OK).json({
+      statusCode: HttpStatus.OK,
+      message: "Regions reordered successfully.",
       data,
     });
   }

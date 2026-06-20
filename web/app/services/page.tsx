@@ -25,7 +25,6 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function ServicesPage() {
-  const page = await getPageBySlug(PAGE_SLUGS.services).catch(() => null);
-  return <ServicesPageContent page={page} />;
+export default function ServicesPage() {
+  return <ServicesPageContent />;
 }

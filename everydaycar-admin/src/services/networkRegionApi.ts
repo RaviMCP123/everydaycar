@@ -81,6 +81,17 @@ export const networkRegionApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["NetworkRegion"],
     }),
+    reorderNetworkRegions: builder.mutation<
+      NetworkRegionListApiResponse,
+      { ids: string[] }
+    >({
+      query: ({ ids }) => ({
+        url: API.REORDER_NETWORK_REGION,
+        method: "PATCH",
+        body: { ids },
+      }),
+      invalidatesTags: ["NetworkRegion"],
+    }),
   }),
 });
 
@@ -91,4 +102,5 @@ export const {
   useUpdateNetworkRegionMutation,
   useUpdateNetworkRegionStatusMutation,
   useDeleteNetworkRegionMutation,
+  useReorderNetworkRegionsMutation,
 } = networkRegionApi;

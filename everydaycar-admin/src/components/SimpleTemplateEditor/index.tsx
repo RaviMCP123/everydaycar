@@ -1,15 +1,51 @@
 import React from "react";
 import { Form } from "react-bootstrap";
 import { Upload } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import CKEditor from "@components/CKEditor";
 import Label from "@components/form/Label";
+import Message from "@components/form/input/ErrorMessage";
 import { Language } from "interface/common";
 import { PageTemplate } from "@config/pageTemplates";
 import type { UploadFile } from "antd/es/upload/interface";
 import showToast from "@utils/toast";
 
 const MAX_SIZE_MB = 5;
+
+const ADD_SECTION_BUTTON_CLASS =
+  "inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700";
+
+function scrollToEditorItem(elementId: string) {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      document.getElementById(elementId)?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    });
+  });
+}
+
+type AboutWhoItemContent = {
+  icon?: string;
+  title?: Record<string, string> | string;
+  text?: Record<string, string> | string;
+};
+
+type AboutCompanyFactsItemContent = {
+  icon?: string;
+  title?: Record<string, string> | string;
+  text?: Record<string, string> | string;
+};
+
+type FaqItemContent = {
+  question?: Record<string, string> | string;
+  answer?: Record<string, string> | string;
+};
+
+const ABOUT_WHO_ITEM_ICON_KEY = (index: number) => `aboutWhoItem-${index}-icon`;
+const ABOUT_COMPANY_FACTS_ITEM_ICON_KEY = (index: number) =>
+  `aboutCompanyFactsItem-${index}-icon`;
 
 interface SimpleTemplateEditorProps {
   template: PageTemplate;
@@ -19,6 +55,7 @@ interface SimpleTemplateEditorProps {
   onContentChange: (key: string, value: any, lang?: string) => void;
   imageFiles?: Record<string, UploadFile[]>;
   onImageChange?: (key: string, files: UploadFile[]) => void;
+  fieldErrors?: Record<string, string>;
   /** Optional: enables page dropdown only when field has selectPageForRedirect (home template section links). */
   allPages?: Array<{
     id?: string;
@@ -39,6 +76,7 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
   onContentChange,
   imageFiles = {},
   onImageChange,
+  fieldErrors = {},
   allPages,
   excludePageId,
 }) => {
@@ -87,9 +125,514 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
   };
 
   const handleImageChange = (key: string, fileList: UploadFile[]) => {
+    const processedFileList = fileList.slice(0, 1).map((file) => {
+      if (file.originFileObj && !file.url) {
+        const previewUrl = URL.createObjectURL(file.originFileObj);
+        return {
+          ...file,
+          url: previewUrl,
+          thumbUrl: previewUrl,
+          status: "done" as const,
+        };
+      }
+      return {
+        ...file,
+        thumbUrl: file.url || file.thumbUrl,
+        status: file.status || ("done" as const),
+      };
+    });
     if (onImageChange) {
-      onImageChange(key, fileList);
+      onImageChange(key, processedFileList);
     }
+  };
+
+  const getAboutWhoItems = (): AboutWhoItemContent[] => {
+    const items = content?.aboutWhoItems;
+    return Array.isArray(items) ? items : [];
+  };
+
+  const setAboutWhoItems = (items: AboutWhoItemContent[]) => {
+    onContentChange("aboutWhoItems", items);
+  };
+
+  const getAboutWhoItemFieldValue = (
+    item: AboutWhoItemContent,
+    field: "title" | "text",
+    lang: string,
+  ): string => {
+    const value = item[field];
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    if (typeof value === "object") {
+      const langValue = value[lang];
+      if (typeof langValue === "string") return langValue;
+      const first = Object.values(value).find((entry) => typeof entry === "string");
+      return typeof first === "string" ? first : "";
+    }
+    return "";
+  };
+
+  const updateAboutWhoItemField = (
+    index: number,
+    field: "title" | "text",
+    lang: string,
+    nextValue: string,
+  ) => {
+    const items = [...getAboutWhoItems()];
+    const current = { ...(items[index] || {}) };
+    const currentField = current[field];
+    const nextField =
+      typeof currentField === "object" && currentField !== null && !Array.isArray(currentField)
+        ? { ...currentField, [lang]: nextValue }
+        : { [lang]: nextValue };
+    items[index] = { ...current, [field]: nextField };
+    setAboutWhoItems(items);
+  };
+
+  const addAboutWhoItem = () => {
+    const nextIndex = getAboutWhoItems().length;
+    setAboutWhoItems([...getAboutWhoItems(), { title: {}, text: {} }]);
+    scrollToEditorItem(`about-who-item-${nextIndex}`);
+  };
+
+  const removeAboutWhoItem = (index: number) => {
+    const items = getAboutWhoItems().filter((_, itemIndex) => itemIndex !== index);
+    setAboutWhoItems(items);
+    if (onImageChange) {
+      onImageChange(ABOUT_WHO_ITEM_ICON_KEY(index), []);
+    }
+  };
+
+  const getAboutCompanyFactsItems = (): AboutCompanyFactsItemContent[] => {
+    const items = content?.aboutCompanyFactsItems;
+    return Array.isArray(items) ? items : [];
+  };
+
+  const setAboutCompanyFactsItems = (items: AboutCompanyFactsItemContent[]) => {
+    onContentChange("aboutCompanyFactsItems", items);
+  };
+
+  const getAboutCompanyFactsItemFieldValue = (
+    item: AboutCompanyFactsItemContent,
+    field: "title" | "text",
+    lang: string,
+  ): string => {
+    const value = item[field];
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    if (typeof value === "object") {
+      const langValue = value[lang];
+      if (typeof langValue === "string") return langValue;
+      const first = Object.values(value).find((entry) => typeof entry === "string");
+      return typeof first === "string" ? first : "";
+    }
+    return "";
+  };
+
+  const updateAboutCompanyFactsItemField = (
+    index: number,
+    field: "title" | "text",
+    lang: string,
+    nextValue: string,
+  ) => {
+    const items = [...getAboutCompanyFactsItems()];
+    const current = { ...(items[index] || {}) };
+    const currentField = current[field];
+    const nextField =
+      typeof currentField === "object" && currentField !== null && !Array.isArray(currentField)
+        ? { ...currentField, [lang]: nextValue }
+        : { [lang]: nextValue };
+    items[index] = { ...current, [field]: nextField };
+    setAboutCompanyFactsItems(items);
+  };
+
+  const addAboutCompanyFactsItem = () => {
+    const nextIndex = getAboutCompanyFactsItems().length;
+    setAboutCompanyFactsItems([
+      ...getAboutCompanyFactsItems(),
+      { title: {}, text: {} },
+    ]);
+    scrollToEditorItem(`about-company-facts-item-${nextIndex}`);
+  };
+
+  const removeAboutCompanyFactsItem = (index: number) => {
+    const items = getAboutCompanyFactsItems().filter(
+      (_, itemIndex) => itemIndex !== index,
+    );
+    setAboutCompanyFactsItems(items);
+    if (onImageChange) {
+      onImageChange(ABOUT_COMPANY_FACTS_ITEM_ICON_KEY(index), []);
+    }
+  };
+
+  const getFaqItems = (): FaqItemContent[] => {
+    const items = content?.faqItems;
+    return Array.isArray(items) ? items : [];
+  };
+
+  const setFaqItems = (items: FaqItemContent[]) => {
+    onContentChange("faqItems", items);
+  };
+
+  const getFaqItemFieldValue = (
+    item: FaqItemContent,
+    field: "question" | "answer",
+    lang: string,
+  ): string => {
+    const value = item[field];
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    if (typeof value === "object") {
+      const langValue = value[lang];
+      if (typeof langValue === "string") return langValue;
+      const first = Object.values(value).find((entry) => typeof entry === "string");
+      return typeof first === "string" ? first : "";
+    }
+    return "";
+  };
+
+  const updateFaqItemField = (
+    index: number,
+    field: "question" | "answer",
+    lang: string,
+    nextValue: string,
+  ) => {
+    const items = [...getFaqItems()];
+    const current = { ...(items[index] || {}) };
+    const currentField = current[field];
+    const nextField =
+      typeof currentField === "object" && currentField !== null && !Array.isArray(currentField)
+        ? { ...currentField, [lang]: nextValue }
+        : { [lang]: nextValue };
+    items[index] = { ...current, [field]: nextField };
+    setFaqItems(items);
+  };
+
+  const addFaqItem = () => {
+    const nextIndex = getFaqItems().length;
+    setFaqItems([...getFaqItems(), { question: {}, answer: {} }]);
+    scrollToEditorItem(`faq-item-${nextIndex}`);
+  };
+
+  const removeFaqItem = (index: number) => {
+    setFaqItems(getFaqItems().filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  const renderAboutWhoItemsEditor = (lang: string) => {
+    const items = getAboutWhoItems();
+
+    return (
+      <div className="mt-6 border-t border-gray-200 pt-6 dark:border-gray-700">
+        <div className="mb-4">
+          <h4 className="text-base font-semibold text-gray-800 dark:text-white">
+            Who We Are Items
+          </h4>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Add feature blocks with icon, title, and description.
+          </p>
+        </div>
+
+        {items.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
+            No items yet. Click &quot;Add Section&quot; to create one.
+          </p>
+        ) : null}
+
+        {items.map((item, index) => {
+          const iconKey = ABOUT_WHO_ITEM_ICON_KEY(index);
+          const imageFileList = imageFiles[iconKey] || [];
+
+          return (
+            <div
+              key={`about-who-item-${index}`}
+              id={`about-who-item-${index}`}
+              className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40"
+            >
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h5 className="text-sm font-semibold text-gray-800 dark:text-white">
+                  Item {index + 1}
+                </h5>
+                <button
+                  type="button"
+                  onClick={() => removeAboutWhoItem(index)}
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                >
+                  <DeleteOutlined />
+                  Remove
+                </button>
+              </div>
+
+              <Form.Group className="mb-4">
+                <Label>Item Icon</Label>
+                <Upload
+                  listType="picture-card"
+                  fileList={imageFileList}
+                  beforeUpload={beforeUpload}
+                  onChange={({ fileList }) => handleImageChange(iconKey, fileList)}
+                  maxCount={1}
+                >
+                  {imageFileList.length < 1 && (
+                    <div>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>Upload</div>
+                    </div>
+                  )}
+                </Upload>
+              </Form.Group>
+
+              <Form.Group className="mb-4">
+                <Label>
+                  Item Title<span className="text-error-500">*</span>
+                </Label>
+                <Form.Control
+                  type="text"
+                  className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm"
+                  value={getAboutWhoItemFieldValue(item, "title", lang)}
+                  onChange={(event) =>
+                    updateAboutWhoItemField(index, "title", lang, event.target.value)
+                  }
+                  placeholder="Feature title"
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-0">
+                <Label>
+                  Item Description<span className="text-error-500">*</span>
+                </Label>
+                <Form.Control
+                  as="textarea"
+                  rows={4}
+                  className="w-full rounded-lg border appearance-none px-4 py-2.5 text-sm"
+                  value={getAboutWhoItemFieldValue(item, "text", lang)}
+                  onChange={(event) =>
+                    updateAboutWhoItemField(index, "text", lang, event.target.value)
+                  }
+                  placeholder="Feature description"
+                />
+              </Form.Group>
+            </div>
+          );
+        })}
+
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={addAboutWhoItem}
+            className={ADD_SECTION_BUTTON_CLASS}
+          >
+            <PlusOutlined />
+            Add Section
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderAboutCompanyFactsItemsEditor = (lang: string) => {
+    const items = getAboutCompanyFactsItems();
+
+    return (
+      <div className="mt-6 border-t border-gray-200 pt-6 dark:border-gray-700">
+        <div className="mb-4">
+          <h4 className="text-base font-semibold text-gray-800 dark:text-white">
+            Company Facts Items
+          </h4>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Add fact blocks with icon, title, and description.
+          </p>
+        </div>
+
+        {items.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
+            No items yet. Click &quot;Add Section&quot; to create one.
+          </p>
+        ) : null}
+
+        {items.map((item, index) => {
+          const iconKey = ABOUT_COMPANY_FACTS_ITEM_ICON_KEY(index);
+          const imageFileList = imageFiles[iconKey] || [];
+
+          return (
+            <div
+              key={`about-company-facts-item-${index}`}
+              id={`about-company-facts-item-${index}`}
+              className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40"
+            >
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h5 className="text-sm font-semibold text-gray-800 dark:text-white">
+                  Item {index + 1}
+                </h5>
+                <button
+                  type="button"
+                  onClick={() => removeAboutCompanyFactsItem(index)}
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                >
+                  <DeleteOutlined />
+                  Remove
+                </button>
+              </div>
+
+              <Form.Group className="mb-4">
+                <Label>Item Icon</Label>
+                <Upload
+                  listType="picture-card"
+                  fileList={imageFileList}
+                  beforeUpload={beforeUpload}
+                  onChange={({ fileList }) => handleImageChange(iconKey, fileList)}
+                  maxCount={1}
+                >
+                  {imageFileList.length < 1 && (
+                    <div>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>Upload</div>
+                    </div>
+                  )}
+                </Upload>
+              </Form.Group>
+
+              <Form.Group className="mb-4">
+                <Label>
+                  Item Title<span className="text-error-500">*</span>
+                </Label>
+                <Form.Control
+                  type="text"
+                  className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm"
+                  value={getAboutCompanyFactsItemFieldValue(item, "title", lang)}
+                  onChange={(event) =>
+                    updateAboutCompanyFactsItemField(
+                      index,
+                      "title",
+                      lang,
+                      event.target.value,
+                    )
+                  }
+                  placeholder="Fact title"
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-0">
+                <Label>
+                  Item Description<span className="text-error-500">*</span>
+                </Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  className="w-full rounded-lg border appearance-none px-4 py-2.5 text-sm"
+                  value={getAboutCompanyFactsItemFieldValue(item, "text", lang)}
+                  onChange={(event) =>
+                    updateAboutCompanyFactsItemField(
+                      index,
+                      "text",
+                      lang,
+                      event.target.value,
+                    )
+                  }
+                  placeholder="Fact description"
+                />
+              </Form.Group>
+            </div>
+          );
+        })}
+
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={addAboutCompanyFactsItem}
+            className={ADD_SECTION_BUTTON_CLASS}
+          >
+            <PlusOutlined />
+            Add Section
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderFaqItemsEditor = (lang: string) => {
+    const items = getFaqItems();
+
+    return (
+      <div className="mt-6 border-t border-gray-200 pt-6 dark:border-gray-700">
+        <div className="mb-4">
+          <h4 className="text-base font-semibold text-gray-800 dark:text-white">
+            FAQ Questions
+          </h4>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+            Add questions and answers for the accordion list.
+          </p>
+        </div>
+
+        {items.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-gray-300 px-4 py-6 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
+            No questions yet. Click &quot;Add Question&quot; to create one.
+          </p>
+        ) : null}
+
+        {items.map((item, index) => (
+          <div
+            key={`faq-item-${index}`}
+            id={`faq-item-${index}`}
+            className="mb-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/40"
+          >
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h5 className="text-sm font-semibold text-gray-800 dark:text-white">
+                Question {index + 1}
+              </h5>
+              <button
+                type="button"
+                onClick={() => removeFaqItem(index)}
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+              >
+                <DeleteOutlined />
+                Remove
+              </button>
+            </div>
+
+            <Form.Group className="mb-4">
+              <Label>
+                Question<span className="text-error-500">*</span>
+              </Label>
+              <Form.Control
+                type="text"
+                className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm"
+                value={getFaqItemFieldValue(item, "question", lang)}
+                onChange={(event) =>
+                  updateFaqItemField(index, "question", lang, event.target.value)
+                }
+                placeholder="Enter the question"
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-0">
+              <Label>
+                Answer<span className="text-error-500">*</span>
+              </Label>
+              <Form.Control
+                as="textarea"
+                rows={4}
+                className="w-full rounded-lg border appearance-none px-4 py-2.5 text-sm"
+                value={getFaqItemFieldValue(item, "answer", lang)}
+                onChange={(event) =>
+                  updateFaqItemField(index, "answer", lang, event.target.value)
+                }
+                placeholder="Enter the answer"
+              />
+            </Form.Group>
+          </div>
+        ))}
+
+        <div className="mt-4 flex justify-center">
+          <button
+            type="button"
+            onClick={addFaqItem}
+            className={ADD_SECTION_BUTTON_CLASS}
+          >
+            <PlusOutlined />
+            Add Question
+          </button>
+        </div>
+      </div>
+    );
   };
 
   const beforeUpload = (file: File) => {
@@ -112,6 +655,11 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
     }
 
     const value = getContentValue(field.key, lang);
+    const errorKey = field.multilingual === false ? field.key : `${field.key}-${lang}`;
+    const fieldError = fieldErrors[errorKey];
+    const invalidClass = fieldError
+      ? "border-rose-300 focus:border-rose-300 dark:border-rose-400"
+      : "border-gray-300 focus:border-brand-300 dark:border-gray-700";
 
     switch (field.type) {
       case "text":
@@ -125,14 +673,19 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
               <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">{field.helpText}</p>
             )}
             <Form.Control
-              type="text"
-              className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm"
+              type={field.key === "footerEmail" ? "email" : "text"}
+              as={field.multiline ? "textarea" : undefined}
+              rows={field.multiline ? 5 : undefined}
+              className={`w-full rounded-lg border appearance-none px-4 py-2.5 text-sm ${invalidClass} ${
+                field.multiline ? "min-h-[120px] resize-y" : "h-11"
+              }`}
               value={value}
               onChange={(e) => {
                 setFieldValue(field, lang, e.target.value);
               }}
               placeholder={field.placeholder || ""}
             />
+            <Message message={fieldError || ""} />
           </Form.Group>
         );
 
@@ -146,13 +699,16 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
             {field.helpText && (
               <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">{field.helpText}</p>
             )}
-            <CKEditor
-              keyName={`${field.key}-${lang}`}
-              value={String(value || "")}
-              setValue={(_key, nextValue) => {
-                setFieldValue(field, lang, nextValue);
-              }}
-            />
+            <div className={fieldError ? "rounded-lg ring-1 ring-rose-300" : ""}>
+              <CKEditor
+                keyName={`${field.key}-${lang}`}
+                value={String(value || "")}
+                setValue={(_key, nextValue) => {
+                  setFieldValue(field, lang, nextValue);
+                }}
+              />
+            </div>
+            <Message message={fieldError || ""} />
           </Form.Group>
         );
 
@@ -167,20 +723,23 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
             {field.helpText && (
               <p className="mb-1 text-xs text-gray-500 dark:text-gray-400">{field.helpText}</p>
             )}
-            <Upload
-              listType="picture-card"
-              fileList={imageFileList}
-              beforeUpload={beforeUpload}
-              onChange={({ fileList }) => handleImageChange(field.key, fileList)}
-              maxCount={1}
-            >
-              {imageFileList.length < 1 && (
-                <div>
-                  <PlusOutlined />
-                  <div style={{ marginTop: 8 }}>Upload</div>
-                </div>
-              )}
-            </Upload>
+            <div className={fieldError ? "rounded-lg ring-1 ring-rose-300 p-1 w-fit" : ""}>
+              <Upload
+                listType="picture-card"
+                fileList={imageFileList}
+                beforeUpload={beforeUpload}
+                onChange={({ fileList }) => handleImageChange(field.key, fileList)}
+                maxCount={1}
+              >
+                {imageFileList.length < 1 && (
+                  <div>
+                    <PlusOutlined />
+                    <div style={{ marginTop: 8 }}>Upload</div>
+                  </div>
+                )}
+              </Upload>
+            </div>
+            <Message message={fieldError || ""} />
           </Form.Group>
         );
 
@@ -208,7 +767,7 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
               <div className="mb-2">
                 <Form.Control
                   as="select"
-                  className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700"
+                  className={`h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 bg-transparent text-gray-800 ${invalidClass} focus:ring-brand-500/20`}
                   value={selectValue}
                   onChange={(e) => {
                     setFieldValue(field, lang, e.target.value || "");
@@ -244,13 +803,14 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
               </p>
               <Form.Control
                 type="text"
-                className="h-11 w-full rounded-lg border px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700"
+                className={`h-11 w-full rounded-lg border px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden focus:ring-3 dark:bg-gray-900 dark:text-white/90 bg-transparent text-gray-800 ${invalidClass} focus:ring-brand-500/20`}
                 value={value}
                 onChange={(e) => {
                   setFieldValue(field, lang, e.target.value);
                 }}
                 placeholder={field.placeholder || ""}
               />
+              <Message message={fieldError || ""} />
             </Form.Group>
           );
         }
@@ -263,13 +823,14 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
             </Label>
             <Form.Control
               type="text"
-              className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm"
+              className={`h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm ${invalidClass}`}
               value={value}
               onChange={(e) => {
                 setFieldValue(field, lang, e.target.value);
               }}
               placeholder={field.placeholder || ""}
             />
+            <Message message={fieldError || ""} />
           </Form.Group>
         );
       }
@@ -283,7 +844,7 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
             </Label>
             <Form.Control
               as="select"
-              className="h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm"
+              className={`h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm ${invalidClass}`}
               value={value || field.options?.[0]?.value || ""}
               onChange={(e) => {
                 setFieldValue(field, lang, e.target.value);
@@ -295,6 +856,7 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
                 </option>
               ))}
             </Form.Control>
+            <Message message={fieldError || ""} />
           </Form.Group>
         );
 
@@ -309,12 +871,18 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
       hero: [],
       aboutHero: [],
       aboutWho: [],
+      aboutNotDo: [],
+      aboutServed: [],
+      aboutCompanyFacts: [],
+      aboutJoin: [],
       aboutWhy: [],
       servicesHero: [],
       servicesCard: [],
       servicesCta: [],
       legalHero: [],
       legalDescription: [],
+      faqHero: [],
+      faqList: [],
       networkHero: [],
       networkSearch: [],
       networkRegion: [],
@@ -350,6 +918,14 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
         sections.aboutHero.push(field);
       } else if (field.key.startsWith("aboutWho")) {
         sections.aboutWho.push(field);
+      } else if (field.key.startsWith("aboutNotDo")) {
+        sections.aboutNotDo.push(field);
+      } else if (field.key.startsWith("aboutServed")) {
+        sections.aboutServed.push(field);
+      } else if (field.key.startsWith("aboutCompanyFacts")) {
+        sections.aboutCompanyFacts.push(field);
+      } else if (field.key.startsWith("aboutJoin")) {
+        sections.aboutJoin.push(field);
       } else if (field.key.startsWith("aboutWhy")) {
         sections.aboutWhy.push(field);
       } else if (field.key.startsWith("servicesHero")) {
@@ -362,6 +938,10 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
         sections.legalHero.push(field);
       } else if (field.key === "legalDescription") {
         sections.legalDescription.push(field);
+      } else if (field.key.startsWith("faqHero")) {
+        sections.faqHero.push(field);
+      } else if (field.key.startsWith("faqList")) {
+        sections.faqList.push(field);
       } else if (field.key.startsWith("networkHero")) {
         sections.networkHero.push(field);
       } else if (field.key.startsWith("networkSearch")) {
@@ -384,7 +964,7 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
         field.key.startsWith("footerTagline") ||
         field.key.startsWith("footerAddress") ||
         field.key.startsWith("footerPhone") ||
-        field.key.startsWith("footerGetInTouchTitle") ||
+        field.key.startsWith("footerEmail") ||
         field.key.startsWith("footerCopyright")
       ) {
         sections.footerMain.push(field);
@@ -474,6 +1054,71 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
             {languageList.map((lang) => (
               <div key={lang.code} className={lang.code !== activeLang ? "hidden" : ""}>
                 {sections.aboutWho.map((field) => renderField(field, lang.code))}
+                {template.key === "ABOUT_TEMPLATE_V1"
+                  ? renderAboutWhoItemsEditor(lang.code)
+                  : null}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {sections.aboutNotDo.length > 0 && (
+          <div className="section bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+              What We Do Not Do Section
+            </h3>
+            {languageList.map((lang) => (
+              <div key={lang.code} className={lang.code !== activeLang ? "hidden" : ""}>
+                {sections.aboutNotDo.map((field) => renderField(field, lang.code))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {sections.aboutServed.length > 0 && (
+          <div className="section bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+              Served Locations Section
+            </h3>
+            {languageList.map((lang) => (
+              <div key={lang.code} className={lang.code !== activeLang ? "hidden" : ""}>
+                {sections.aboutServed.map((field) => renderField(field, lang.code))}
+              </div>
+            ))}
+            {template.key === "ABOUT_TEMPLATE_V1" ? (
+              <p className="mt-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-xs text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+                Region badges are loaded automatically from{" "}
+                <strong>Network Regions</strong> (active regions only, max 5, sorted by
+                admin order).
+              </p>
+            ) : null}
+          </div>
+        )}
+
+        {sections.aboutCompanyFacts.length > 0 && (
+          <div className="section bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+              Company Facts Section
+            </h3>
+            {languageList.map((lang) => (
+              <div key={lang.code} className={lang.code !== activeLang ? "hidden" : ""}>
+                {sections.aboutCompanyFacts.map((field) => renderField(field, lang.code))}
+                {template.key === "ABOUT_TEMPLATE_V1"
+                  ? renderAboutCompanyFactsItemsEditor(lang.code)
+                  : null}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {sections.aboutJoin.length > 0 && (
+          <div className="section bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+              Join Network CTA Section
+            </h3>
+            {languageList.map((lang) => (
+              <div key={lang.code} className={lang.code !== activeLang ? "hidden" : ""}>
+                {sections.aboutJoin.map((field) => renderField(field, lang.code))}
               </div>
             ))}
           </div>
@@ -540,6 +1185,31 @@ const SimpleTemplateEditor: React.FC<SimpleTemplateEditorProps> = ({
             {languageList.map((lang) => (
               <div key={lang.code} className={lang.code !== activeLang ? "hidden" : ""}>
                 {sections.legalDescription.map((field) => renderField(field, lang.code))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {sections.faqHero.length > 0 && (
+          <div className="section bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">FAQ Hero Section</h3>
+            {languageList.map((lang) => (
+              <div key={lang.code} className={lang.code !== activeLang ? "hidden" : ""}>
+                {sections.faqHero.map((field) => renderField(field, lang.code))}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {(sections.faqList.length > 0 || template.key === "FAQ_TEMPLATE_V1") && (
+          <div className="section bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">FAQ List Section</h3>
+            {languageList.map((lang) => (
+              <div key={lang.code} className={lang.code !== activeLang ? "hidden" : ""}>
+                {sections.faqList.map((field) => renderField(field, lang.code))}
+                {template.key === "FAQ_TEMPLATE_V1"
+                  ? renderFaqItemsEditor(lang.code)
+                  : null}
               </div>
             ))}
           </div>
